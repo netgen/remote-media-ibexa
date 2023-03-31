@@ -1,4 +1,6 @@
 .idea/
+.phpunit.cache/
+coverage/
 vendor/
 .php_cs.cache
 .php-cs-fixer.cache

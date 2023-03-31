@@ -16,7 +16,8 @@
   },
   "require-dev": {
     "netgen/layouts-coding-standard": "^2.0",
-    "symfony/var-dumper": "^5.4"
+    "symfony/var-dumper": "^5.4",
+    "friendsofphp/php-cs-fixer": "^3.14"
   },
   "config": {
     "allow-plugins": false
@@ -36,6 +37,9 @@
   },
   "minimum-stability": "dev",
   "prefer-stable": true,
+  "scripts": {
+    "fix": "@php vendor/bin/php-cs-fixer fix"
+  },
   "extra": {
     "branch-alias": {
       "dev-master": "1.0.x-dev"

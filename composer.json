@@ -1,0 +1,44 @@
+{
+  "name": "netgen/remote-media-ibexa",
+  "description": "Netgen Remote Media & Ibexa CMS integration",
+  "license": "GPL-2.0-only",
+  "type": "symfony-bundle",
+  "authors": [
+    {
+      "name": "Netgen",
+      "homepage": "https://netgen.io"
+    }
+  ],
+  "require": {
+    "php": "^8.1",
+    "ibexa/core": "^4.1",
+    "netgen/remote-media-bundle": "^3.0"
+  },
+  "require-dev": {
+    "netgen/layouts-coding-standard": "^2.0",
+    "symfony/var-dumper": "^5.4"
+  },
+  "config": {
+    "allow-plugins": false
+  },
+  "autoload": {
+    "psr-4": {
+      "Netgen\\RemoteMediaIbexa\\": "lib/",
+      "Netgen\\Bundle\\RemoteMediaIbexaBundle\\": "bundle/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Netgen\\RemoteMediaIbexa\\Tests\\": "tests/lib/",
+      "Netgen\\Bundle\\RemoteMediaIbexaBundle\\Tests\\": "tests/bundle/",
+      "Netgen\\Layouts\\Tests\\": "vendor/netgen/layouts-core/tests/lib/"
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "extra": {
+    "branch-alias": {
+      "dev-master": "1.0.x-dev"
+    }
+  }
+}

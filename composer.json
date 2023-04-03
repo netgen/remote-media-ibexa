@@ -11,7 +11,7 @@
   ],
   "require": {
     "php": "^8.1",
-    "ibexa/core": "^4.1",
+    "ibexa/core": "^4.4",
     "netgen/remote-media-bundle": "^3.0"
   },
   "require-dev": {

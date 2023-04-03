@@ -17,7 +17,11 @@ jobs:
       matrix:
         php: ['8.1']
         symfony: ['~5.4.0']
-        deps: ['low', 'normal']
+        deps: ['normal']
+        include:
+          - php: '8.1'
+            symfony: '~5.4.0'
+            deps: 'low'
 
     steps:
       - uses: actions/checkout@v3

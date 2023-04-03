@@ -1,0 +1,10 @@
+services:
+    Netgen\Bundle\RemoteMediaIbexaBundle\Templating\Twig\Extension\RemoteMediaIbexaExtension:
+        tags:
+            - { name: twig.extension }
+
+    Netgen\Bundle\RemoteMediaIbexaBundle\Templating\Twig\Runtime\RemoteMediaIbexaRuntime:
+        arguments:
+            - "@netgen_remote_media.provider"
+        tags:
+            - { name: twig.runtime }

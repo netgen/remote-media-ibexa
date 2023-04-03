@@ -1,0 +1,6 @@
+image_variations:
+    ibexa_admin:
+        preview:
+            transformations:
+                - { name: limit, params: [600] }
+                - { name: quality, params: ['auto', 'eco'] }

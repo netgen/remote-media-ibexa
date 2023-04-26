@@ -1,0 +1,9 @@
+orm:
+    entity_managers:
+        default:
+            mappings:
+                NetgenRemoteMediaIbexaBundle:
+                    type: xml
+                    prefix: Netgen\RemoteMediaIbexa\API\Values
+                    dir: "%kernel.project_dir%/vendor/netgen/remote-media-ibexa/bundle/Resources/config/doctrine"
+                    is_bundle: false

@@ -1,5 +1,7 @@
 # Netgen Remote Media & Ibexa CMS integration
 
+This bundle provides an integration of [Netgen Remote Media](https://github.com/netgen/NetgenRemoteMediaBundle/tree/3.0) for Ibexa CMS.
+
 ## Installation instructions
 
 [INSTALL.md](INSTALL.md)

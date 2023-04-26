@@ -1,0 +1,16 @@
+services:
+    netgen.remote_media_ibexa.admin.component.stylesheets:
+        parent: Ibexa\AdminUi\Component\TwigComponent
+        arguments:
+            - "@twig"
+            - "@@NetgenRemoteMedia/stylesheets.html.twig"
+        tags:
+            - { name: ibexa.admin_ui.component, group: 'stylesheet-head' }
+
+    netgen.remote_media_ibexa.admin.component.javascripts:
+        parent: Ibexa\AdminUi\Component\TwigComponent
+        arguments:
+            - "@twig"
+            - "@@NetgenRemoteMedia/javascripts.html.twig"
+        tags:
+            - { name: ibexa.admin_ui.component, group: 'script-body' }

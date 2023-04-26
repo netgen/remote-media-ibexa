@@ -30,3 +30,8 @@ services:
     Netgen\RemoteMediaIbexa\Persistence\Legacy\FieldValueConverter:
         tags:
             - { name: ibexa.field_type.storage.legacy.converter, alias: '%ng.fieldtype.remote_media.identifier%' }
+
+    Netgen\RemoteMediaIbexa\FieldType\FieldStorage\Gateway\DoctrineStorage:
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@Netgen\RemoteMediaIbexa\Converter\Hash'

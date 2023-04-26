@@ -1,0 +1,18 @@
+field_definition.ngremotemedia.selection_allowed_types: 'Dozvoljeni tipovi'
+field_definition.ngremotemedia.type.image: 'Slika'
+field_definition.ngremotemedia.type.audio: 'Audio'
+field_definition.ngremotemedia.type.video: 'Video'
+field_definition.ngremotemedia.type.document: 'Dokument'
+field_definition.ngremotemedia.type.other: 'Ostalo'
+
+field_definition.ngremotemedia.selection_allowed_visibilities: 'Dozvoljene vidljivosti'
+field_definition.ngremotemedia.visibility.public: 'Javno'
+field_definition.ngremotemedia.visibility.private: 'Privatno'
+field_definition.ngremotemedia.visibility.protected: 'Zaštićeno'
+
+field_definition.ngremotemedia.selection_allowed_tags: 'Dozvoljeni tagovi'
+field_definition.ngremotemedia.checkbox_disable_upload: 'Onemogući upload'
+field_definition.ngremotemedia.input_location_source: 'Izvor lokacije'
+field_definition.ngremotemedia.selection_allowed_variations: 'Dozvoljene varijacije za kropiranje'
+field_definition.ngremotemedia.selection_parent_folder: 'Dozvoljeno podstablo mapa'
+field_definition.ngremotemedia.selection_folder: 'Dozvoljena mapa'

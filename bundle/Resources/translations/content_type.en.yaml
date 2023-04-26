@@ -1,0 +1,18 @@
+field_definition.ngremotemedia.selection_allowed_types: 'Allowed types'
+field_definition.ngremotemedia.type.image: 'Image'
+field_definition.ngremotemedia.type.audio: 'Audio'
+field_definition.ngremotemedia.type.video: 'Video'
+field_definition.ngremotemedia.type.document: 'Document'
+field_definition.ngremotemedia.type.other: 'Other'
+
+field_definition.ngremotemedia.selection_allowed_visibilities: 'Allowed visibilities'
+field_definition.ngremotemedia.visibility.public: 'Public'
+field_definition.ngremotemedia.visibility.private: 'Private'
+field_definition.ngremotemedia.visibility.protected: 'Protected'
+
+field_definition.ngremotemedia.selection_allowed_tags: 'Allowed tags'
+field_definition.ngremotemedia.checkbox_disable_upload: 'Disable upload'
+field_definition.ngremotemedia.input_location_source: 'Location source'
+field_definition.ngremotemedia.selection_allowed_variations: 'Allowed croppable variations'
+field_definition.ngremotemedia.selection_parent_folder: 'Allowed folder subtree'
+field_definition.ngremotemedia.selection_folder: 'Allowed folder'

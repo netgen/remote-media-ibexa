@@ -10,6 +10,7 @@ services:
         public: true
         arguments:
             - '@Netgen\RemoteMediaIbexa\Converter\Hash'
+            - '@netgen_remote_media.provider'
             - '%ng.fieldtype.remote_media.identifier%'
         tags:
             - { name: ibexa.field_type, alias: '%ng.fieldtype.remote_media.identifier%' }

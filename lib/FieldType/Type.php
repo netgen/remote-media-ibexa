@@ -9,7 +9,7 @@ use Ibexa\Contracts\Core\Persistence\Content\FieldValue;
 use Ibexa\Contracts\Core\Repository\Values\ContentType\FieldDefinition;
 use Ibexa\Core\FieldType\FieldType;
 use Ibexa\Core\FieldType\ValidationError;
-use Netgen\RemoteMedia\API\Values\RemoteResource;
+use Netgen\RemoteMedia\API\ProviderInterface;
 use Netgen\RemoteMedia\API\Values\RemoteResourceLocation;
 use Netgen\RemoteMediaIbexa\Converter\Hash as HashConverter;
 
@@ -60,6 +60,7 @@ final class Type extends FieldType
 
     public function __construct(
         private readonly HashConverter $hashConverter,
+        private readonly ProviderInterface $remoteMediaProvider,
         private readonly string $fieldTypeIdentifier,
     ) {
     }
@@ -154,9 +155,11 @@ final class Type extends FieldType
 
             switch ($name) {
                 case 'allowedTypes':
-                    if (!is_array($value) || count(array_diff($value, RemoteResource::SUPPORTED_TYPES)) > 0) {
+                    $supportedTypes = $this->remoteMediaProvider->getSupportedTypes();
+
+                    if (!is_array($value) || count(array_diff($value, $supportedTypes)) > 0) {
                         $validationErrors[] = new ValidationError(
-                            "Setting '%setting%' must be an array and contain valid supported Remote Media type.",
+                            "Setting '%setting%' must be an array and contain valid supported Remote Media types.",
                             null,
                             [
                                 '%setting%' => $name,
@@ -168,9 +171,11 @@ final class Type extends FieldType
                     break;
 
                 case 'allowedVisibilities':
-                    if (!is_array($value) || count(array_diff($value, RemoteResource::SUPPORTED_VISIBILITIES)) > 0) {
+                    $supportedVisibilities = $this->remoteMediaProvider->getSupportedVisibilities();
+
+                    if (!is_array($value) || count(array_diff($value, $supportedVisibilities)) > 0) {
                         $validationErrors[] = new ValidationError(
-                            "Setting '%setting%' must be an array and contain valid supported Remote Media visibility.",
+                            "Setting '%setting%' must be an array and contain valid supported Remote Media visibilities.",
                             null,
                             [
                                 '%setting%' => $name,
@@ -182,9 +187,11 @@ final class Type extends FieldType
                     break;
 
                 case 'allowedTags':
-                    if (!is_array($value)) {
+                    $tags = $this->remoteMediaProvider->listTags();
+
+                    if (!is_array($value) || count(array_diff($value, $tags)) > 0) {
                         $validationErrors[] = new ValidationError(
-                            "Setting '%setting%' must be an array and contain valid tags.",
+                            "Setting '%setting%' must be an array and contain valid tags that are available.",
                             null,
                             [
                                 '%setting%' => $name,

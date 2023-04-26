@@ -26,3 +26,7 @@ services:
             - '@netgen_remote_media.resolver.variation'
         tags:
             - { name: ibexa.admin_ui.field_type.form.mapper.definition, fieldType: '%ng.fieldtype.remote_media.identifier%' }
+
+    Netgen\RemoteMediaIbexa\Persistence\Legacy\FieldValueConverter:
+        tags:
+            - { name: ibexa.field_type.storage.legacy.converter, alias: '%ng.fieldtype.remote_media.identifier%' }

@@ -1,1 +1,4 @@
 services:
+    Netgen\RemoteMediaIbexa\Converter\Hash:
+        arguments:
+            - '@netgen_remote_media.provider'

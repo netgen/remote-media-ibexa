@@ -1,0 +1,12 @@
+{% extends "@IbexaCore/content_fields.html.twig" %}
+
+{% block ngremotemedia_field %}
+{% apply spaceless %}
+    {% if not ibexa_field_is_empty(content, field) %}
+        {% set remote_resource_location = field.value.remoteResourceLocation %}
+        <div {{ block('field_attributes') }}>
+            {{ ngrm_ibexa_admin_preview_html_tag(remote_resource_location)|raw }}
+        </div>
+    {% endif %}
+{% endapply %}
+{% endblock %}

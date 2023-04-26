@@ -1,0 +1,27 @@
+{% extends "@IbexaCore/content_fields.html.twig" %}
+
+{% block ngremotemedia_field %}
+{% apply spaceless %}
+    {% if not ibexa_field_is_empty(content, field) %}
+        {% set variation_group = contentTypeIdentifier %}
+        {% set variation = parameters.alias ?? parameters.variation|default(null) %}
+        {% set raw_variation = parameters.raw_variation|default(null) %}
+        {% set html_attributes = parameters.html_attributes|default([]) %}
+        {% set force_video = parameters.force_video is defined and parameters.force_video is same as true %}
+        {% set use_thumbnail = parameters.use_thumbnail is defined and parameters.use_thumbnail is same as true %}
+
+        {% set remote_resource_location = field.value.remoteResourceLocation %}
+        {% set remote_resource = field.value.remoteResourceLocation.remoteResource %}
+
+        <div {{ block('field_attributes') }}>
+            {% if raw_variation %}
+                {{ ngrm_remote_resource_raw_variation_html_tag(remote_resource, raw_variation, html_attributes, force_video, use_thumbnail)|raw }}
+            {% elseif variation %}
+                {{ ngrm_remote_resource_variation_html_tag(remote_resource_location, variation_group, variation, html_attributes, force_video, use_thumbnail)|raw }}
+            {% else %}
+                {{ ngrm_remote_resource_html_tag(remote_resource, html_attributes, force_video, use_thumbnail)|raw }}
+            {% endif %}
+        </div>
+    {% endif %}
+{% endapply %}
+{% endblock %}

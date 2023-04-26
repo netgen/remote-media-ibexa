@@ -41,6 +41,7 @@ class NetgenRemoteMediaIbexaExtension extends Extension implements PrependExtens
     public function prepend(ContainerBuilder $container): void
     {
         $prependConfigs = [
+            'ibexa.yaml' => 'ibexa',
             'remote_media.yaml' => 'netgen_remote_media',
             'doctrine.yaml' => 'doctrine',
         ];

@@ -1,0 +1,10 @@
+system:
+    default:
+        field_templates:
+            - { template: '@ibexadesign/ngremotemedia/field_view.html.twig', priority: 1 }
+
+    admin_group:
+        admin_ui_forms:
+            content_edit:
+                form_templates:
+                    - { template: '@ibexadesign/ngremotemedia/field_edit.html.twig', priority: 100 }

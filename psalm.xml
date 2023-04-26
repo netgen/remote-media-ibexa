@@ -12,4 +12,45 @@
             <directory name="vendor" />
         </ignoreFiles>
     </projectFiles>
+
+    <issueHandlers>
+        <PossiblyNullPropertyAssignmentValue>
+            <errorLevel type="suppress">
+                <file name="lib/Persistence/Legacy/FieldValueConverter.php" />
+                <referencedProperty name="Ibexa\Core\Persistence\Legacy\Content\StorageFieldValue::$dataInt" />
+            </errorLevel>
+        </PossiblyNullPropertyAssignmentValue>
+
+        <PropertyNotSetInConstructor>
+            <errorLevel type="suppress">
+                <file name="lib/FieldType/Type.php" />
+                <referencedProperty name="Netgen\RemoteMediaIbexa\FieldType\Type::$transformationProcessor" />
+            </errorLevel>
+        </PropertyNotSetInConstructor>
+
+        <RedundantConditionGivenDocblockType>
+            <errorLevel type="suppress">
+                <file name="lib/Persistence/Legacy/FieldValueConverter.php" />
+            </errorLevel>
+        </RedundantConditionGivenDocblockType>
+
+        <ParamNameMismatch>
+            <errorLevel type="suppress">
+                <file name="lib/FieldType/Type.php" />
+            </errorLevel>
+        </ParamNameMismatch>
+
+        <InternalMethod>
+            <errorLevel type="suppress">
+                <file name="lib/FieldType/Type.php" />
+                <referencedMethod name="Ibexa\Core\Repository\Values\Content\Content::getContentType" />
+            </errorLevel>
+        </InternalMethod>
+
+        <DocblockTypeContradiction>
+            <errorLevel type="suppress">
+                <file name="lib/Persistence/Legacy/FieldValueConverter.php" />
+            </errorLevel>
+        </DocblockTypeContradiction>
+    </issueHandlers>
 </psalm>

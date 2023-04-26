@@ -8,3 +8,8 @@ includes:
 parameters:
     checkGenericClassInNonGenericObjectType: false
     treatPhpDocTypesAsCertain: false
+
+    ignoreErrors:
+        -
+            message: '#Method [a-zA-Z0-9\\_]+::[a-zA-Z0-9\\_]+\(\) has parameter \$(context|fieldIds) with no value type specified in iterable type array.#'
+            path: lib/FieldType/FieldStorage.php

@@ -35,3 +35,9 @@ services:
         arguments:
             - '@doctrine.orm.entity_manager'
             - '@Netgen\RemoteMediaIbexa\Converter\Hash'
+
+    Netgen\RemoteMediaIbexa\FieldType\FieldStorage:
+        arguments:
+            - '@Netgen\RemoteMediaIbexa\FieldType\FieldStorage\Gateway\DoctrineStorage'
+        tags:
+            - { name: ibexa.field_type.storage.external.handler, alias: '%ng.fieldtype.remote_media.identifier%' }

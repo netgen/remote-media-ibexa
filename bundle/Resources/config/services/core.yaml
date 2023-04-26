@@ -1,4 +1,15 @@
+parameters:
+    ng.fieldtype.remote_media.identifier: 'ngremotemedia'
+
 services:
     Netgen\RemoteMediaIbexa\Converter\Hash:
         arguments:
             - '@netgen_remote_media.provider'
+
+    Netgen\RemoteMediaIbexa\FieldType\Type:
+        public: true
+        arguments:
+            - '@Netgen\RemoteMediaIbexa\Converter\Hash'
+            - '%ng.fieldtype.remote_media.identifier%'
+        tags:
+            - { name: ibexa.field_type, alias: '%ng.fieldtype.remote_media.identifier%' }

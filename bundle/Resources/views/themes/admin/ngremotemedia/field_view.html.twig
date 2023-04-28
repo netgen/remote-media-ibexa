@@ -1,11 +1,127 @@
 {% extends "@IbexaCore/content_fields.html.twig" %}
 
+{% trans_default_domain 'content_type' %}
+
 {% block ngremotemedia_field %}
 {% apply spaceless %}
     {% if not ibexa_field_is_empty(content, field) %}
         {% set remote_resource_location = field.value.remoteResourceLocation %}
+        {% set remote_resource = remote_resource_location.remoteResource %}
+
         <div {{ block('field_attributes') }}>
-            {{ ngrm_ibexa_admin_preview_html_tag(remote_resource_location)|raw }}
+            <div class="ezimage-field ibexa-field-preview ibexa-field-preview--ezimage">
+                <div class="ibexa-field-preview__image-wrapper">
+                    <div class="ibexa-field-preview__image">
+                        {% if remote_resource.type in ['image', 'video', 'audio'] %}
+                            {{ ngrm_ibexa_admin_preview_html_tag(remote_resource_location)|raw }}
+                        {% else %}
+                            <span class="fa-stack fa-lg">
+                                <i class="fa fa-file fa-stack-2x"></i>
+
+                                {% if remote_resource.metadata.format is defined %}
+                                    <i class="fa fa-stack-1x preview-format">{{ remote_resource.metadata.format }}</i>
+                                {% endif %}
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="ibexa-field-preview__meta-wrapper">
+                        <table>
+                            <thead>
+                                <tr class="ibexa-field-preview__meta-title-row">
+                                    <th class="">{{ 'field_definition.ngremotemedia.view.label.properties'|trans }}:</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr class="ibexa-field-preview__meta-value-row">
+                                    <td>{{ 'field_definition.ngremotemedia.view.label.file_name'|trans }}:</td>
+                                    <td>{{ remote_resource.name }}</td>
+                                </tr>
+
+                                <tr class="ibexa-field-preview__meta-value-row">
+                                    <td>{{ 'field_definition.ngremotemedia.view.label.media_type'|trans }}:</td>
+                                    <td>
+                                        {{ ('field_definition.ngremotemedia.type.' ~ remote_resource.type)|trans }}
+
+                                        {% if remote_resource.metadata.format is defined and remote_resource.metadata.format %}
+                                            ({{ remote_resource.metadata.format }})
+                                        {% endif %}
+
+                                        {% if remote_resource.visibility == 'private' %}
+                                            <i class="fa fa-solid fa-eye-slash"></i>
+                                        {% elseif remote_resource.visibility == 'protected' %}
+                                            <i class="fa fa-solid fa-lock"></i>
+                                        {% else %}
+                                            <i class="fa fa-solid fa-globe"></i>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+
+                                <tr class="ibexa-field-preview__meta-value-row">
+                                    <td>{{ 'field_definition.ngremotemedia.view.label.size'|trans }}:</td>
+                                    <td>{{ remote_resource.size|ibexa_file_size(2) }}</td>
+                                </tr>
+
+                                <tr class="ibexa-field-preview__meta-value-row">
+                                    <td>{{ 'field_definition.ngremotemedia.view.label.folder'|trans }}:</td>
+                                    <td>{{ remote_resource.folder }}</td>
+                                </tr>
+
+                                {% if remote_resource.metadata.width is defined or remote_resource.metadata.height is defined %}
+                                    <tr class="ibexa-field-preview__meta-value-row">
+                                        <td>{{ 'field_definition.ngremotemedia.view.label.master_dimensions'|trans }}:</td>
+                                        <td>
+                                            {% if remote_resource.metadata.width is defined and remote_resource.metadata.width %}
+                                                {{ 'field_definition.ngremotemedia.view.label.width'|trans }}: {{ remote_resource.metadata.width }} px
+                                            {% endif %}
+
+                                            {% set ratio = null %}
+                                            {% if remote_resource.metadata.height is defined and remote_resource.metadata.height %}
+                                                {% if remote_resource.metadata.width is defined and remote_resource.metadata.width %}
+                                                    ,
+                                                    {% set ratio = remote_resource.metadata.width / remote_resource.metadata.height %}
+                                                {% endif %}
+                                                {{ 'field_definition.ngremotemedia.view.label.height'|trans }}: {{ remote_resource.metadata.height }} px
+                                            {% endif %}
+
+                                            {% if ratio %}
+                                                , {{ 'field_definition.ngremotemedia.view.label.ratio'|trans }}: {{ ratio|round(2) }}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endif %}
+
+                                <tr class="ibexa-field-preview__meta-value-row">
+                                    <td>{{ 'field_definition.ngremotemedia.view.label.alternative_text'|trans }}:</td>
+                                    <td>{{ remote_resource.altText }}</td>
+                                </tr>
+
+                                <tr class="ibexa-field-preview__meta-value-row">
+                                    <td>{{ 'field_definition.ngremotemedia.view.label.caption'|trans }}:</td>
+                                    <td>{{ remote_resource.caption }}</td>
+                                </tr>
+
+                                <tr class="ibexa-field-preview__meta-value-row">
+                                    <td>{{ 'field_definition.ngremotemedia.view.label.tags'|trans }}:</td>
+                                    <td>{{ remote_resource.tags|join(', ') }}</td>
+                                </tr>
+
+                                <tr class="ibexa-field-preview__meta-value-row">
+                                    <td>{{ 'field_definition.ngremotemedia.view.label.watermark_text'|trans }}:</td>
+                                    <td>{{ remote_resource_location.watermarkText }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="ibexa-field-preview__actions-wrapper">
+                    <a class="ibexa-field-preview__action ibexa-field-preview__action--preview" href="{{ remote_resource.url }}" target="_blank">
+                        <svg class="ibexa-icon ibexa-icon--medium ibexa-icon--light"><use xlink:href="/bundles/ibexaadminui/img/ibexa-icons.svg#open-newtab"></use></svg>
+                    </a>
+                </div>
+            </div>
         </div>
     {% endif %}
 {% endapply %}

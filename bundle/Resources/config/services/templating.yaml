@@ -6,5 +6,6 @@ services:
     Netgen\Bundle\RemoteMediaIbexaBundle\Templating\Twig\Runtime\RemoteMediaIbexaRuntime:
         arguments:
             - "@netgen_remote_media.provider"
+            - "@security.helper"
         tags:
             - { name: twig.runtime }

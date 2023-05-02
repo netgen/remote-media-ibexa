@@ -18,6 +18,7 @@ services:
     Netgen\Bundle\RemoteMediaIbexaBundle\Form\Field\FieldValueFormMapper:
         arguments:
             - '@ibexa.api.service.field_type'
+            - '@security.helper'
         tags:
             - { name: ibexa.admin_ui.field_type.form.mapper.value, fieldType: '%ng.fieldtype.remote_media.identifier%' }
 

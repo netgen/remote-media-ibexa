@@ -14,12 +14,18 @@
         {% set remote_resource = field.value.remoteResourceLocation.remoteResource %}
 
         <div {{ block('field_attributes') }}>
-            {% if raw_variation %}
-                {{ ngrm_remote_resource_raw_variation_html_tag(remote_resource, raw_variation, html_attributes, force_video, use_thumbnail)|raw }}
-            {% elseif variation %}
-                {{ ngrm_remote_resource_variation_html_tag(remote_resource_location, variation_group, variation, html_attributes, force_video, use_thumbnail)|raw }}
-            {% else %}
-                {{ ngrm_remote_resource_html_tag(remote_resource, html_attributes, force_video, use_thumbnail)|raw }}
+            {% if remote_resource.public or is_granted('ibexa:ngrm:read_protected') %}
+                {% if remote_resource.protected %}
+                    {% set remote_resource_location = ngrm_authenticate_remote_resource_location(remote_resource_location, 300) %}
+                {% endif %}
+
+                {% if raw_variation %}
+                    {{ ngrm_remote_resource_raw_variation_html_tag(remote_resource_location.remote_resource, raw_variation, html_attributes, force_video, use_thumbnail)|raw }}
+                {% elseif variation %}
+                    {{ ngrm_remote_resource_variation_html_tag(remote_resource_location, variation_group, variation, html_attributes, force_video, use_thumbnail)|raw }}
+                {% else %}
+                    {{ ngrm_remote_resource_html_tag(remote_resource_location.remote_resource, html_attributes, force_video, use_thumbnail)|raw }}
+                {% endif %}
             {% endif %}
         </div>
     {% endif %}

@@ -1,0 +1,4 @@
+'role.policy.ngrm': 'Netgen Remote Media'
+'role.policy.ngrm.all_functions': 'Sve funkcije'
+'role.policy.ngrm.read_protected': 'Pregledavanje zaštićenih resursa'
+'role.policy.ngrm.upload': 'Upload resursa'

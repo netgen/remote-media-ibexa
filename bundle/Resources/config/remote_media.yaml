@@ -4,3 +4,8 @@ image_variations:
             transformations:
                 - { name: limit, params: [600] }
                 - { name: quality, params: ['auto', 'eco'] }
+        preview_protected:
+            transformations:
+                - { name: limit, params: [600] }
+                - { name: quality, params: ['auto', 'eco'] }
+                - { name: effect, params: ['pixelate', 5] }

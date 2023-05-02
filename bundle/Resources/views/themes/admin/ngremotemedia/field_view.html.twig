@@ -116,11 +116,18 @@
                     </div>
                 </div>
 
-                <div class="ibexa-field-preview__actions-wrapper">
-                    <a class="ibexa-field-preview__action ibexa-field-preview__action--preview" href="{{ remote_resource.url }}" target="_blank">
-                        <svg class="ibexa-icon ibexa-icon--medium ibexa-icon--light"><use xlink:href="/bundles/ibexaadminui/img/ibexa-icons.svg#open-newtab"></use></svg>
-                    </a>
-                </div>
+                {% if remote_resource.public or is_granted('ibexa:ngrm:read_protected') %}
+                    {% set remote_resource_url = remote_resource.url %}
+                    {% if remote_resource.protected %}
+                        {% set remote_resource_url = ngrm_authenticate_remote_resource(remote_resource, 600).url %}
+                    {% endif %}
+
+                    <div class="ibexa-field-preview__actions-wrapper">
+                        <a class="ibexa-field-preview__action ibexa-field-preview__action--preview" href="{{ remote_resource_url }}" target="_blank">
+                            <svg class="ibexa-icon ibexa-icon--medium ibexa-icon--light"><use xlink:href="/bundles/ibexaadminui/img/ibexa-icons.svg#open-newtab"></use></svg>
+                        </a>
+                    </div>
+                {% endif %}
             </div>
         </div>
     {% endif %}

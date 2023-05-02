@@ -9,6 +9,7 @@ use Ibexa\Contracts\ContentForms\FieldType\FieldValueFormMapperInterface;
 use Ibexa\Contracts\Core\Repository\FieldTypeService;
 use Netgen\RemoteMedia\Form\Type\RemoteMediaType;
 use Symfony\Component\Form\FormInterface;
+use Symfony\Component\Security\Core\Security;
 
 use function array_values;
 
@@ -16,6 +17,7 @@ class FieldValueFormMapper implements FieldValueFormMapperInterface
 {
     public function __construct(
         private readonly FieldTypeService $fieldTypeService,
+        private readonly Security $security,
     ) {
     }
 
@@ -30,6 +32,7 @@ class FieldValueFormMapper implements FieldValueFormMapperInterface
         $contentTypeIdentifier = $content?->getContentType()->identifier ?? 'default';
 
         $locationSource = $fieldSettings['locationSource'] ?? 'ibexa_content_' . $contentTypeIdentifier . '_' . $fieldDefinition->identifier;
+        $disableUpload = !$this->security->isGranted('ibexa:ngrm:upload') || $fieldSettings['disableUpload'];
 
         $fieldForm->add(
             $formConfig->getFormFactory()->createBuilder()
@@ -45,7 +48,7 @@ class FieldValueFormMapper implements FieldValueFormMapperInterface
                         'allowed_visibilities' => array_values($fieldSettings['allowedVisibilities']),
                         'allowed_variations' => array_values($fieldSettings['allowedVariations']),
                         'allowed_tags' => array_values($fieldSettings['allowedTags']),
-                        'disable_upload' => $fieldSettings['disableUpload'],
+                        'disable_upload' => $disableUpload,
                         'parent_folder' => $fieldSettings['parentFolder'],
                         'folder' => $fieldSettings['folder'],
                     ],

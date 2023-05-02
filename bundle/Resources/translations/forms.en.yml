@@ -1,0 +1,4 @@
+'role.policy.ngrm': 'Netgen Remote Media'
+'role.policy.ngrm.all_functions': 'All functions'
+'role.policy.ngrm.read_protected': 'View protected resources'
+'role.policy.ngrm.upload': 'Upload resources'

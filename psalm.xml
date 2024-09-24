@@ -52,5 +52,11 @@
                 <file name="lib/Persistence/Legacy/FieldValueConverter.php" />
             </errorLevel>
         </DocblockTypeContradiction>
+
+        <UnsupportedPropertyReferenceUsage>
+            <errorLevel type="suppress">
+                <file name="lib/Persistence/Legacy/FieldValueConverter.php" />
+            </errorLevel>
+        </UnsupportedPropertyReferenceUsage>
     </issueHandlers>
 </psalm>

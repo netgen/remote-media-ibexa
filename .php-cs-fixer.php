@@ -9,4 +9,4 @@ return (new Netgen\Layouts\CodingStandard\PhpCsFixer\Config())
             ->exclude(['vendor', 'node_modules'])
             ->in(__DIR__)
     )
-    ;
+;

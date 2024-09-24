@@ -11,7 +11,7 @@ use Ibexa\Contracts\Core\Search;
 use Ibexa\Contracts\Core\Search\FieldType\IntegerField;
 use Ibexa\Contracts\Core\Search\FieldType\MultipleStringField;
 use Ibexa\Contracts\Core\Search\FieldType\StringField;
-use Ibexa\Core\FieldType\FieldType;
+use Ibexa\Contracts\Core\Search\FieldType;
 use Netgen\RemoteMedia\API\ProviderInterface;
 use Netgen\RemoteMedia\API\Values\Folder;
 use Netgen\RemoteMedia\API\Values\RemoteResource;
@@ -117,7 +117,7 @@ final class SearchFields implements Indexable
             new Search\Field(
                 'tags',
                 array_map(
-                    fn (string $tag): string => $this->prepareStringValue($tag),
+                    fn (string $tag): string => (string) $this->prepareStringValue($tag),
                     $resource instanceof RemoteResource ? $resource->getTags() : [],
                 ),
                 new MultipleStringField(),

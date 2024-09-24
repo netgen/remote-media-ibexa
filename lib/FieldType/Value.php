@@ -29,7 +29,7 @@ final class Value extends BaseValue
     public function getName(): string
     {
         return $this->remoteResourceLocation instanceof RemoteResourceLocation
-            ? $this->remoteResourceLocation->getRemoteResource()->getName()
+            ? ($this->remoteResourceLocation->getRemoteResource()->getName() ?? $this->remoteResourceLocation->getRemoteResource()->getRemoteId())
             : '';
     }
 }

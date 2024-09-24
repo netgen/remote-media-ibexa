@@ -56,7 +56,9 @@ final class SearchFields implements Indexable
             ),
             new Search\Field(
                 'type',
-                $resource instanceof RemoteResource ? $resource->getType() : null,
+                $this->prepareStringValue(
+                    $resource instanceof RemoteResource ? $resource->getType() : null,
+                ),
                 new StringField(),
             ),
             new Search\Field(
@@ -66,37 +68,54 @@ final class SearchFields implements Indexable
             ),
             new Search\Field(
                 'name',
-                $resource instanceof RemoteResource ? $resource->getName() : null,
+                $this->prepareStringValue(
+                    $resource instanceof RemoteResource ? $resource->getName() : null,
+                ),
                 new StringField(),
             ),
             new Search\Field(
                 'folder',
-                $resource instanceof RemoteResource ? ($resource->getFolder() instanceof Folder ? (string) $resource->getFolder() : null) : null,
+                $this->prepareStringValue(
+                    $resource instanceof RemoteResource
+                        ? ($resource->getFolder() instanceof Folder ? (string) $resource->getFolder() : null)
+                        : null,
+                ),
                 new StringField(),
             ),
             new Search\Field(
                 'originalfilename',
-                $resource instanceof RemoteResource ? $resource->getOriginalFilename() : null,
+                $this->prepareStringValue(
+                    $resource instanceof RemoteResource ? $resource->getOriginalFilename() : null,
+                ),
                 new StringField(),
             ),
             new Search\Field(
                 'visibility',
-                $resource instanceof RemoteResource ? $resource->getVisibility() : null,
+                $this->prepareStringValue(
+                    $resource instanceof RemoteResource ? $resource->getVisibility() : null,
+                ),
                 new StringField(),
             ),
             new Search\Field(
                 'alttext',
-                $resource instanceof RemoteResource ? $resource->getAltText() : null,
+                $this->prepareStringValue(
+                    $resource instanceof RemoteResource ? $resource->getAltText() : null,
+                ),
                 new StringField(),
             ),
             new Search\Field(
                 'caption',
-                $resource instanceof RemoteResource ? $resource->getCaption() : null,
+                $this->prepareStringValue(
+                    $resource instanceof RemoteResource ? $resource->getCaption() : null,
+                ),
                 new StringField(),
             ),
             new Search\Field(
                 'tags',
-                $resource instanceof RemoteResource ? $resource->getTags() : [],
+                array_map(
+                    fn (string $tag): string => $this->prepareStringValue($tag),
+                    $resource instanceof RemoteResource ? $resource->getTags() : [],
+                ),
                 new MultipleStringField(),
             ),
         ];
@@ -131,5 +150,10 @@ final class SearchFields implements Indexable
     public function getDefaultSortField(): ?string
     {
         return $this->getDefaultMatchField();
+    }
+
+    private function prepareStringValue(?string $value): ?string
+    {
+        return $value !== null ? trim(mb_substr($value, 0, 255)) : null;
     }
 }

@@ -279,6 +279,11 @@ final class Type extends FieldType
         return $validationErrors;
     }
 
+    public function isSearchable(): bool
+    {
+        return true;
+    }
+
     protected function createValueFromInput(mixed $inputValue): Value
     {
         return match (true) {

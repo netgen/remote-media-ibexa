@@ -15,6 +15,12 @@ services:
         tags:
             - { name: ibexa.field_type, alias: '%ng.fieldtype.remote_media.identifier%' }
 
+    Netgen\RemoteMediaIbexa\FieldType\SearchFields:
+        arguments:
+            - '@netgen_remote_media.provider'
+        tags:
+            - { name: ibexa.field_type.indexable, alias: '%ng.fieldtype.remote_media.identifier%' }
+
     Netgen\Bundle\RemoteMediaIbexaBundle\Form\Field\FieldValueFormMapper:
         arguments:
             - '@ibexa.api.service.field_type'

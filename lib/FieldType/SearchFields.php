@@ -7,15 +7,19 @@ namespace Netgen\RemoteMediaIbexa\FieldType;
 use Ibexa\Contracts\Core\FieldType\Indexable;
 use Ibexa\Contracts\Core\Persistence\Content\Field;
 use Ibexa\Contracts\Core\Persistence\Content\Type\FieldDefinition;
-use Ibexa\Contracts\Core\Search\FieldType\IntegerField;
-use Ibexa\Contracts\Core\Search\FieldType\StringField;
-use Ibexa\Contracts\Core\Search\FieldType\MultipleStringField;
 use Ibexa\Contracts\Core\Search;
+use Ibexa\Contracts\Core\Search\FieldType\IntegerField;
+use Ibexa\Contracts\Core\Search\FieldType\MultipleStringField;
+use Ibexa\Contracts\Core\Search\FieldType\StringField;
 use Ibexa\Core\FieldType\FieldType;
 use Netgen\RemoteMedia\API\ProviderInterface;
 use Netgen\RemoteMedia\API\Values\Folder;
 use Netgen\RemoteMedia\API\Values\RemoteResource;
 use Netgen\RemoteMedia\Exception\RemoteResourceNotFoundException;
+
+use function array_map;
+use function mb_substr;
+use function trim;
 
 final class SearchFields implements Indexable
 {

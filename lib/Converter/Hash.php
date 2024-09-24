@@ -18,8 +18,7 @@ class Hash
 {
     public function __construct(
         private readonly ProviderInterface $remoteMediaProvider,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<string,string|null>

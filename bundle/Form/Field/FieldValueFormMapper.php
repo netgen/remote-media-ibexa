@@ -18,8 +18,7 @@ class FieldValueFormMapper implements FieldValueFormMapperInterface
     public function __construct(
         private readonly FieldTypeService $fieldTypeService,
         private readonly Security $security,
-    ) {
-    }
+    ) {}
 
     public function mapFieldValueForm(FormInterface $fieldForm, FieldData $data): void
     {

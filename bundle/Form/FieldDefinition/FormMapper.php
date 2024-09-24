@@ -22,8 +22,7 @@ class FormMapper implements FieldDefinitionFormMapperInterface
     public function __construct(
         private readonly ProviderInterface $remoteMediaProvider,
         private readonly VariationResolver $variationResolver,
-    ) {
-    }
+    ) {}
 
     public function mapFieldDefinitionForm(FormInterface $fieldDefinitionForm, FieldDefinitionData $data): void
     {

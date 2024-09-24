@@ -13,6 +13,5 @@ class NgRemoteMediaContentLink
         public readonly int $version,
         public RemoteResourceLocation $remoteResourceLocation,
         public ?int $id = null,
-    ) {
-    }
+    ) {}
 }

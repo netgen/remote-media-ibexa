@@ -62,8 +62,7 @@ final class Type extends FieldType
         private readonly HashConverter $hashConverter,
         private readonly ProviderInterface $remoteMediaProvider,
         private readonly string $fieldTypeIdentifier,
-    ) {
-    }
+    ) {}
 
     public function getFieldTypeIdentifier(): string
     {
@@ -293,7 +292,5 @@ final class Type extends FieldType
         };
     }
 
-    protected function checkValueStructure(SPIValue $value): void
-    {
-    }
+    protected function checkValueStructure(SPIValue $value): void {}
 }

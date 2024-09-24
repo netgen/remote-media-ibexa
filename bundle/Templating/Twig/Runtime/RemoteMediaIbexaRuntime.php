@@ -14,8 +14,7 @@ class RemoteMediaIbexaRuntime
     public function __construct(
         private readonly ProviderInterface $remoteMediaProvider,
         private readonly AuthorizationCheckerInterface $security,
-    ) {
-    }
+    ) {}
 
     public function getIbexaAdminPreviewHtmlTag(RemoteResourceLocation $remoteResourceLocation): string
     {

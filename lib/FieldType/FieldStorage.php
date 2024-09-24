@@ -17,8 +17,7 @@ final class FieldStorage implements FieldStorageInterface
 {
     public function __construct(
         private readonly Gateway $gateway,
-    ) {
-    }
+    ) {}
 
     public function storeFieldData(VersionInfo $versionInfo, Field $field, array $context): ?bool
     {

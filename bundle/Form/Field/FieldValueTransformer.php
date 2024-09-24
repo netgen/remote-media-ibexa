@@ -13,8 +13,7 @@ class FieldValueTransformer implements DataTransformerInterface
 {
     public function __construct(
         private readonly FieldType $fieldType,
-    ) {
-    }
+    ) {}
 
     public function transform($value): ?RemoteResourceLocation
     {

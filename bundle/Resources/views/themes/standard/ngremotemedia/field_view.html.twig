@@ -3,7 +3,8 @@
 {% block ngremotemedia_field %}
 {% apply spaceless %}
     {% if not ibexa_field_is_empty(content, field) %}
-        {% set variation_group = contentTypeIdentifier %}
+        {% set content_type_identifier = contentTypeIdentifier|default(content.contentType.identifier) %}
+        {% set variation_group = content_type_identifier %}
         {% set variation = parameters.alias ?? parameters.variation|default(null) %}
         {% set raw_variation = parameters.raw_variation|default(null) %}
         {% set html_attributes = parameters.html_attributes|default([]) %}

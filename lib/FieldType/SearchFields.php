@@ -32,6 +32,10 @@ final class SearchFields implements Indexable
      */
     public function getIndexData(Field $field, FieldDefinition $fieldDefinition): array
     {
+        if ($this->isEmpty($field)) {
+            return [];
+        }
+
         $remoteResourceLocationId = $field->value->externalData['remote_resource_location_id'];
         $remoteId = $field->value->externalData['remote_id'];
         $watermarkText = $field->value->externalData['watermark_text'];
@@ -154,6 +158,11 @@ final class SearchFields implements Indexable
     public function getDefaultSortField(): ?string
     {
         return $this->getDefaultMatchField();
+    }
+
+    private function isEmpty(Field $field): bool
+    {
+        return $field->value->externalData === null;
     }
 
     private function prepareStringValue(?string $value): ?string

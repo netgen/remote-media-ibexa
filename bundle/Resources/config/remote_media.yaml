@@ -4,8 +4,18 @@ image_variations:
             transformations:
                 - { name: limit, params: [600] }
                 - { name: quality, params: ['auto', 'eco'] }
+        preview_image:
+            transformations:
+                - { name: limit, params: [ 600 ] }
+                - { name: quality, params: [ 'auto', 'eco' ] }
+                - { name: format, params: [ 'jpg' ] }
         preview_protected:
             transformations:
                 - { name: limit, params: [600] }
                 - { name: quality, params: ['auto', 'eco'] }
                 - { name: effect, params: ['pixelate', 5] }
+        preview_protected_image:
+            transformations:
+                - { name: limit, params: [ 600 ] }
+                - { name: quality, params: [ 'auto', 'eco' ] }
+                - { name: effect, params: [ 'pixelate', 5 ] }

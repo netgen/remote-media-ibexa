@@ -1,5 +1,29 @@
+.ibexa-embed-type-image {
+    &.align-right,
+    &.align-left {
+        width: 50%;
+
+        .ibexa-field-preview__image-wrapper {
+            flex-direction: column;
+        }
+
+        .ibexa-field-preview__meta-wrapper {
+            margin-top: 8px;
+        }
+    }
+}
+
 .ngremotemedia-field {
+    .ibexa-field-preview__image-wrapper {
+        display: flex;
+        flex-direction: row;
+    }
+
     .ibexa-field-preview__image {
+        position: relative;
+        max-width: unset;
+        width: fit-content;
+
         video {
             max-width: 100%;
         }
@@ -15,6 +39,12 @@
                 font-weight: bold;
                 margin-top: 25px;
             }
+        }
+
+        .ibexa-field-preview__actions-wrapper {
+            position: absolute;
+            right: 8px;
+            top: 8px;
         }
     }
 }

@@ -23,17 +23,32 @@
                                 {% endif %}
                             </span>
                         {% endif %}
+
+                        {% if remote_resource.public or is_granted('ibexa:ngrm:read_protected') %}
+                            {% set remote_resource_url = remote_resource.url %}
+                            {% if remote_resource.protected %}
+                                {% set remote_resource_url = ngrm_authenticate_remote_resource(remote_resource, 600).url %}
+                            {% endif %}
+
+                            <div class="ibexa-field-preview__actions-wrapper">
+                                <a class="ibexa-field-preview__action ibexa-field-preview__action--preview" href="{{ remote_resource_url }}" target="_blank">
+                                    <svg class="ibexa-icon ibexa-icon--medium ibexa-icon--light"><use xlink:href="/bundles/ibexaadminui/img/ibexa-icons.svg#open-newtab"></use></svg>
+                                </a>
+                            </div>
+                        {% endif %}
                     </div>
 
-                    <div class="ibexa-field-preview__meta-wrapper">
+                    <div class="ibexa-field-preview__meta-wrapper" data-remote-media-properties>
                         <table>
                             <thead>
                                 <tr class="ibexa-field-preview__meta-title-row">
-                                    <th class="">{{ 'field_definition.ngremotemedia.view.label.properties'|trans }}:</th>
+                                    <th class="">
+                                        <button type="button" class="btn ibexa-btn btn ibexa-btn ibexa-btn--secondary" data-remote-media-properties-toggle>{{ 'field_definition.ngremotemedia.view.label.properties'|trans }}</button>
+                                    </th>
                                 </tr>
                             </thead>
 
-                            <tbody>
+                            <tbody class="d-none" data-remote-media-properties-table>
                                 <tr class="ibexa-field-preview__meta-value-row">
                                     <td>{{ 'field_definition.ngremotemedia.view.label.file_name'|trans }}:</td>
                                     <td>{{ remote_resource.name }}</td>
@@ -115,19 +130,6 @@
                         </table>
                     </div>
                 </div>
-
-                {% if remote_resource.public or is_granted('ibexa:ngrm:read_protected') %}
-                    {% set remote_resource_url = remote_resource.url %}
-                    {% if remote_resource.protected %}
-                        {% set remote_resource_url = ngrm_authenticate_remote_resource(remote_resource, 600).url %}
-                    {% endif %}
-
-                    <div class="ibexa-field-preview__actions-wrapper">
-                        <a class="ibexa-field-preview__action ibexa-field-preview__action--preview" href="{{ remote_resource_url }}" target="_blank">
-                            <svg class="ibexa-icon ibexa-icon--medium ibexa-icon--light"><use xlink:href="/bundles/ibexaadminui/img/ibexa-icons.svg#open-newtab"></use></svg>
-                        </a>
-                    </div>
-                {% endif %}
             </div>
         </div>
     {% endif %}

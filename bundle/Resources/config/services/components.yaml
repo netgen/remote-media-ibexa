@@ -14,3 +14,12 @@ services:
             - "@@NetgenRemoteMedia/javascripts.html.twig"
         tags:
             - { name: ibexa.admin_ui.component, group: 'script-body' }
+
+    netgen.remote_media_ibexa.admin.component.field_view:
+        parent: Ibexa\AdminUi\Component\ScriptComponent
+        autowire: true
+        autoconfigure: false
+        arguments:
+            $src: '/bundles/netgenremotemediaibexa/admin/field_view.js'
+        tags:
+            - { name: ibexa.admin_ui.component, group: script-body }

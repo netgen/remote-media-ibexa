@@ -1,7 +1,14 @@
+.ibexa-embed-image-two-columns {
+    display: flex;
+}
+
 .ibexa-embed-type-image {
+    width: 100%;
+
     &.align-right,
     &.align-left {
         width: 50%;
+        float: none;
 
         .ibexa-field-preview__image-wrapper {
             flex-direction: column;

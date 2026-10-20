@@ -1,0 +1,9 @@
+services:
+    Netgen\RemoteMediaIbexa\RichText\ConfigurationProvider:
+        arguments:
+            - '@ibexa.config.resolver'
+            - '@netgen_remote_media.controller.configuration'
+            - '@router'
+            - '@security.helper'
+        tags:
+            - { name: ibexa.field_type.richtext.configuration.provider }

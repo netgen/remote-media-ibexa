@@ -1,0 +1,20 @@
+# Storage and rendering of the remote media element inserted by the CKEditor 5 plugin.
+# Intentionally not enabled in "fieldtypes.ezrichtext.custom_tags": the element has its own
+# toolbar button, enabling it would add the generic custom tag button and attribute form.
+custom_tags:
+    ngremotemedia:
+        template: '@ibexadesign/ngremotemedia/richtext/custom_tag.html.twig'
+        is_inline: false
+        attributes:
+            locationId:
+                type: number
+                required: true
+            variationName:
+                type: string
+                required: false
+            cssClass:
+                type: string
+                required: false
+            alignment:
+                type: string
+                required: false

@@ -1,0 +1,10 @@
+parameters:
+    netgen_remote_media_ibexa.default.richtext.variation_group: default
+    netgen_remote_media_ibexa.default.richtext.location_source: ibexa_richtext
+    netgen_remote_media_ibexa.default.richtext.allowed_types: []
+    netgen_remote_media_ibexa.default.richtext.allowed_visibilities: []
+    netgen_remote_media_ibexa.default.richtext.allowed_tags: []
+    netgen_remote_media_ibexa.default.richtext.disable_upload: false
+    netgen_remote_media_ibexa.default.richtext.folder: ~
+    netgen_remote_media_ibexa.default.richtext.parent_folder: ~
+    netgen_remote_media_ibexa.default.richtext.upload_context: []

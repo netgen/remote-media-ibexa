@@ -77,6 +77,9 @@ parameters as `params`:
 | `cssClass`      | CSS class entered in the editor, if any      |
 | `alignment`     | Alignment set in the editor, if any          |
 
+When the resource has a caption (edited in the Netgen Remote Media dialog, shared by all usages of the resource),
+the template wraps the resource in a `<figure class="ngremotemedia-figure">` with the caption in a `<figcaption>`.
+
 To override it, either add `templates/themes/<your theme>/ngremotemedia/richtext/custom_tag.html.twig`, or set
 another template for the tag:
 

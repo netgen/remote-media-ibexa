@@ -204,33 +204,45 @@ final class RichTextMigration
             );
         }
 
-        foreach ($this->getDroppedCaptions($tags, $leftTags) as [$resourceId, $caption]) {
-            $report->warnings[] = sprintf(
-                '%s: caption of resource "%s" dropped, the tag doesn\'t support it: "%s"',
-                $this->describe($row),
-                $resourceId,
-                $caption,
-            );
+        foreach ($this->getConvertedCaptions($tags, $leftTags) as [$remoteId, $caption]) {
+            $resource = $this->resourceRegistry->get($remoteId);
+
+            if ($resource === null) {
+                continue;
+            }
+
+            $this->resourceRegistry->complete($resource, null, $caption);
+            $resourceCaption = $this->resourceRegistry->getCaption($remoteId);
+
+            if ($resourceCaption !== $caption) {
+                $report->warnings[] = sprintf(
+                    '%s: caption "%s" not used, resource "%s" already has the caption "%s"',
+                    $this->describe($row),
+                    $caption,
+                    $remoteId,
+                    (string) $resourceCaption,
+                );
+            }
         }
     }
 
     /**
-     * Resource IDs and captions of converted tags.
+     * Remote IDs and captions of converted tags.
      *
      * @param \Netgen\RemoteMediaIbexa\Migration\V2\RichTextTag[] $tags
      * @param \Netgen\RemoteMediaIbexa\Migration\V2\RichTextTag[] $leftTags
      *
      * @return array<int, array{0: string, 1: string}>
      */
-    private function getDroppedCaptions(array $tags, array $leftTags): array
+    private function getConvertedCaptions(array $tags, array $leftTags): array
     {
         $leftCaptions = [];
 
         foreach ($leftTags as $tag) {
-            $leftCaptions[] = $tag->getResourceId() . '|' . $tag->getCaption();
+            $leftCaptions[] = $this->getRemoteId($tag) . '|' . $tag->getCaption();
         }
 
-        $droppedCaptions = [];
+        $captions = [];
 
         foreach ($tags as $tag) {
             $caption = $tag->getCaption();
@@ -239,7 +251,7 @@ final class RichTextMigration
                 continue;
             }
 
-            $index = array_search($tag->getResourceId() . '|' . $caption, $leftCaptions, true);
+            $index = array_search($this->getRemoteId($tag) . '|' . $caption, $leftCaptions, true);
 
             if ($index !== false) {
                 unset($leftCaptions[$index]);
@@ -247,10 +259,10 @@ final class RichTextMigration
                 continue;
             }
 
-            $droppedCaptions[] = [$tag->getResourceId(), $caption];
+            $captions[] = [$this->getRemoteId($tag), $caption];
         }
 
-        return $droppedCaptions;
+        return $captions;
     }
 
     /**

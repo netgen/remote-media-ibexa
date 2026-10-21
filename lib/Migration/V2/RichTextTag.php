@@ -82,7 +82,7 @@ final class RichTextTag
     }
 
     /**
-     * Not supported by the Netgen Remote Media 3 custom tag.
+     * Netgen Remote Media 3 keeps the caption on the resource, not in the custom tag.
      */
     public function getCaption(): ?string
     {

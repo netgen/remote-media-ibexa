@@ -39,8 +39,8 @@ final class ResourceRegistry
     /** @var array<int, bool> */
     private array $hasAltText = [];
 
-    /** @var array<int, bool> */
-    private array $hasCaption = [];
+    /** @var array<int, string> non-empty captions of stored resources */
+    private array $captions = [];
 
     /** @var array<string, \Netgen\RemoteMedia\API\Values\RemoteResource> */
     private array $added = [];
@@ -54,7 +54,7 @@ final class ResourceRegistry
     {
         $this->ids = [];
         $this->hasAltText = [];
-        $this->hasCaption = [];
+        $this->captions = [];
         $this->added = [];
 
         $rows = $this->entityManager->getConnection()->fetchAllAssociative(
@@ -65,7 +65,10 @@ final class ResourceRegistry
             $id = (int) $row['id'];
             $this->ids[(string) $row['remote_id']] = $id;
             $this->hasAltText[$id] = ($row['alt_text'] ?? '') !== '';
-            $this->hasCaption[$id] = ($row['caption'] ?? '') !== '';
+
+            if (($row['caption'] ?? '') !== '') {
+                $this->captions[$id] = (string) $row['caption'];
+            }
         }
     }
 
@@ -80,6 +83,20 @@ final class ResourceRegistry
         }
 
         return $this->entityManager->getReference(RemoteResource::class, $this->ids[$remoteId]);
+    }
+
+    /**
+     * Caption of a stored or added resource, null when it has none.
+     */
+    public function getCaption(string $remoteId): ?string
+    {
+        if (isset($this->added[$remoteId])) {
+            $caption = $this->added[$remoteId]->getCaption();
+
+            return ($caption ?? '') === '' ? null : $caption;
+        }
+
+        return $this->captions[$this->ids[$remoteId] ?? 0] ?? null;
     }
 
     /**
@@ -116,7 +133,8 @@ final class ResourceRegistry
 
     /**
      * Sets the alt text and caption of a resource which doesn't have them yet. Netgen Remote Media 2 had them
-     * per field value, Netgen Remote Media 3 has them per resource, so the first non-empty one is kept.
+     * per field value and per RichText tag, Netgen Remote Media 3 has them per resource, so the first non-empty
+     * one is kept.
      */
     public function complete(RemoteResource $resource, ?string $altText, ?string $caption): void
     {
@@ -145,9 +163,9 @@ final class ResourceRegistry
             $this->hasAltText[$id] = true;
         }
 
-        if (!($this->hasCaption[$id] ?? false) && $caption !== null) {
+        if (!isset($this->captions[$id]) && $caption !== null) {
             $connection->update('ngrm_remote_resource', ['caption' => $caption], ['id' => $id]);
-            $this->hasCaption[$id] = true;
+            $this->captions[$id] = $caption;
         }
     }
 
@@ -160,7 +178,10 @@ final class ResourceRegistry
             $id = (int) $resource->getId();
             $this->ids[$remoteId] = $id;
             $this->hasAltText[$id] = ($resource->getAltText() ?? '') !== '';
-            $this->hasCaption[$id] = ($resource->getCaption() ?? '') !== '';
+
+            if (($resource->getCaption() ?? '') !== '') {
+                $this->captions[$id] = (string) $resource->getCaption();
+            }
         }
 
         $this->added = [];

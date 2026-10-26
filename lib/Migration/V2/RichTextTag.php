@@ -9,7 +9,7 @@ use DOMElement;
 use function in_array;
 use function is_array;
 use function json_decode;
-use function trim;
+use function mb_trim;
 
 /**
  * Values of a Netgen Remote Media 2 "ngremotemedia" RichText custom tag.
@@ -38,7 +38,7 @@ final class RichTextTag
         $values = [];
 
         foreach ($element->getElementsByTagNameNS(RichTextConverter::DOCBOOK_NAMESPACE, 'ezvalue') as $valueElement) {
-            $values[$valueElement->getAttribute('key')] = trim($valueElement->textContent);
+            $values[$valueElement->getAttribute('key')] = mb_trim($valueElement->textContent);
         }
 
         return new self($values);

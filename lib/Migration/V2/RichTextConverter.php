@@ -13,7 +13,7 @@ use LogicException;
 
 use function in_array;
 use function iterator_to_array;
-use function trim;
+use function mb_trim;
 
 /**
  * Converts the "ngremotemedia" custom tags of Netgen Remote Media 2 in RichText DocBook to the
@@ -249,7 +249,7 @@ final class RichTextConverter
     private function hasContent(DOMElement $element): bool
     {
         foreach ($element->childNodes as $child) {
-            if ($child instanceof DOMText && trim($child->data) !== '') {
+            if ($child instanceof DOMText && mb_trim($child->data) !== '') {
                 return true;
             }
 

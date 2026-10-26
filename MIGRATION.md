@@ -70,30 +70,33 @@ which render as invalid data.
 
 ## Details
 
-* Resources are created from the field values, without requests to Cloudinary. Resources used only in RichText
-  are loaded from Cloudinary, in batches of 100.
+* Resources which aren't stored yet are loaded from Cloudinary, in batches of 100, for both fields and RichText.
+  Resources stored by a previous run, by an earlier batch or by the field step are not requested again.
 * Netgen Remote Media 2 kept the alt text and caption in each field value (per version and translation) and the
   caption in each RichText tag. Netgen Remote Media 3 keeps them on the resource (synchronized with Cloudinary)
-  and, per usage, as alt text and caption overrides of a location. A resource created from a field value gets the
-  alt text and caption of that field value, which Netgen Remote Media 2 took from Cloudinary, a resource used only
-  in RichText gets the ones loaded from Cloudinary. A field value or tag whose alt text or caption is not empty and
-  differs from the one of the resource gets it as the override of its location, so nothing is lost and
+  and, per usage, as alt text and caption overrides of a location. A resource loaded from Cloudinary gets the alt
+  text and caption on Cloudinary. A field value or tag whose alt text or caption is not empty and differs from the
+  one of the resource (the Cloudinary one) gets it as the override of its location, so nothing is lost and
   `netgen:remote_media:refresh` doesn't change it. Netgen Remote Media 2 never stored RichText captions on
   Cloudinary, so RichText captions mostly become overrides.
-* The MD5 hash of the file is the Cloudinary etag where the field value has it, otherwise empty:
-  `netgen:remote_media:refresh` sets it from Cloudinary.
+* A resource used in a field which can't be loaded from Cloudinary (e.g. it no longer exists there) is listed in
+  the output and created from the first field value using it (ordered by field ID and version), with the alt text
+  and caption of that field value, so the field is migrated anyway. The alt texts and captions of other field
+  values using it are compared with that field value. Its MD5 hash is the Cloudinary etag where the field value has
+  it, otherwise empty.
 * Each field version gets its own location, with the crops of the field value. The location source is
   `ibexa_content_<content type identifier>_<field identifier>`, as with fields edited in Netgen Remote Media 3.
 * In RichText, all versions of a field share one location per resource and crop, with the source configured in
-  `richtext.location_source`. An inline tag replaces its paragraph: the paragraph's content before and after it
-  stays in a paragraph before and after the tag. `variation` becomes `variationName`, `cssclass` becomes
-  `cssClass`, `align` becomes `alignment` (`middle` becomes `center`), and the caption becomes the caption
-  override of the location (see above). Tags with the same resource and crops but different captions get
-  different locations.
+  `richtext.location_source`. Because of that, changing the crop or the alt text or caption override of such an
+  element in a new draft also changes it in the published and other versions. An inline tag replaces its
+  paragraph: the paragraph's content before and after it stays in a paragraph before and after the tag.
+  `variation` becomes `variationName`, `cssclass` becomes `cssClass`, `align` becomes `alignment` (`middle`
+  becomes `center`), and the caption becomes the caption override of the location (see above). Tags with the same
+  resource and crops but different captions get different locations.
 * A converted RichText field is stored only if it doesn't add RichText validation errors.
-* Fields and tags which can't be migrated are listed in the output and left as they are, e.g. resources which
-  no longer exist on Cloudinary, or whose URL, name or filename is longer than the 255 characters Netgen Remote
-  Media 3 can store.
+* Fields and tags which can't be migrated are listed in the output and left as they are, e.g. tags whose resource
+  no longer exists on Cloudinary, or resources whose URL, name or filename is longer than the 255 characters
+  Netgen Remote Media 3 can store.
 * The JSON of Netgen Remote Media 2 stays in `data_text` of migrated fields. Netgen Remote Media 3 doesn't read it,
   and new versions don't copy it.
 * Remote media in Netgen Layouts blocks and collections is migrated by `netgen/layouts-remote-media` 2, with its

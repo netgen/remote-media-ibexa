@@ -1,10 +1,19 @@
 {# Renders the "ngremotemedia" RichText custom tag, override per design in "themes/<theme>/ngremotemedia/richtext/custom_tag.html.twig" #}
 {% set location_id = params.locationId|default('') %}
+{% set location = location_id matches '/^\\d+$/' ? ngrm_remote_resource_location(location_id) : null %}
+{% set caption = location.caption|default('') %}
+
+{% if caption is not empty %}<figure class="ngremotemedia-figure">{% endif %}
 
 {% include '@NetgenRemoteMedia/app/view_resource.html.twig' with {
-    location: location_id matches '/^\\d+$/' ? ngrm_remote_resource_location(location_id) : null,
+    location: location,
     css_class: params.cssClass|default(null),
     variation_name: params.variationName|default(null),
     variation_group: ibexa.configResolver.getParameter('richtext.variation_group', 'netgen_remote_media_ibexa'),
     alignment: params.alignment|default(null),
 } only %}
+
+{% if caption is not empty %}
+    <figcaption>{{ caption }}</figcaption>
+</figure>
+{% endif %}

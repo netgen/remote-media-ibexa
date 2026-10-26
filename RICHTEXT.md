@@ -77,6 +77,11 @@ parameters as `params`:
 | `cssClass`      | CSS class entered in the editor, if any      |
 | `alignment`     | Alignment set in the editor, if any          |
 
+When the location has a caption, the template wraps the resource in a `<figure class="ngremotemedia-figure">`
+with the caption in a `<figcaption>`. The caption of the location (`location.caption`) is its caption override,
+set for this usage in the Netgen Remote Media dialog, or else the caption of the resource, shared by all usages
+and synchronized with Cloudinary. The alt text of the rendered resource follows the same rule.
+
 To override it, either add `templates/themes/<your theme>/ngremotemedia/richtext/custom_tag.html.twig`, or set
 another template for the tag:
 

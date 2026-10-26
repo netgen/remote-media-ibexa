@@ -1,0 +1,45 @@
+services:
+    netgen_remote_media_ibexa.migration.v2.remote_resource_factory:
+        class: Netgen\RemoteMedia\Core\Provider\Cloudinary\Factory\RemoteResource
+        arguments:
+            - '@netgen_remote_media.provider.cloudinary.converter.resource_type'
+            - '@netgen_remote_media.provider.cloudinary.converter.visibility_type'
+            - '@Netgen\RemoteMediaIbexa\Migration\V2\EmptyFileHash'
+            - '%netgen_remote_media.cloudinary.folder_mode%'
+
+    Netgen\RemoteMediaIbexa\Migration\V2\EmptyFileHash: ~
+
+    Netgen\RemoteMediaIbexa\Migration\V2\ValueMapper: ~
+
+    Netgen\RemoteMediaIbexa\Migration\V2\RichTextConverter: ~
+
+    Netgen\RemoteMediaIbexa\Migration\V2\ResourceRegistry:
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@netgen_remote_media.provider'
+
+    Netgen\RemoteMediaIbexa\Migration\V2\FieldMigration:
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@Netgen\RemoteMediaIbexa\Migration\V2\ResourceRegistry'
+            - '@netgen_remote_media_ibexa.migration.v2.remote_resource_factory'
+            - '@Netgen\RemoteMediaIbexa\Migration\V2\ValueMapper'
+            - '@Netgen\RemoteMediaIbexa\FieldType\Type'
+
+    Netgen\RemoteMediaIbexa\Migration\V2\RichTextMigration:
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@Netgen\RemoteMediaIbexa\Migration\V2\ResourceRegistry'
+            - '@Netgen\RemoteMediaIbexa\Migration\V2\ValueMapper'
+            - '@Netgen\RemoteMediaIbexa\Migration\V2\RichTextConverter'
+            - '@ibexa.richtext.validator.docbook'
+            - '@netgen_remote_media_ibexa.migration.v2.richtext_custom_template_validator'
+            - '@ibexa.config.resolver'
+
+    Netgen\Bundle\RemoteMediaIbexaBundle\Command\MigrateV2Command:
+        arguments:
+            - '@Netgen\RemoteMediaIbexa\Migration\V2\FieldMigration'
+            - '@Netgen\RemoteMediaIbexa\Migration\V2\RichTextMigration'
+            - '@ibexa.cache_pool'
+        tags:
+            - { name: console.command, command: 'netgen:remote_media:ibexa:migrate_v2' }

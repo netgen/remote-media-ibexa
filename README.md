@@ -10,6 +10,10 @@ This bundle provides an integration of [Netgen Remote Media](https://github.com/
 
 [RICHTEXT.md](RICHTEXT.md)
 
+## Migration from Netgen Remote Media 2
+
+[MIGRATION.md](MIGRATION.md)
+
 ## Running tests
 
 Running tests requires that you have complete vendors installed, so run

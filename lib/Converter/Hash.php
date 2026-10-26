@@ -30,6 +30,8 @@ class Hash
             'source' => $remoteResourceLocation->getSource(),
             'crop_settings' => serialize($remoteResourceLocation->getCropSettings()),
             'watermark_text' => $remoteResourceLocation->getWatermarkText(),
+            'alt_text_override' => $remoteResourceLocation->getAltTextOverride(),
+            'caption_override' => $remoteResourceLocation->getCaptionOverride(),
         ];
     }
 
@@ -60,6 +62,8 @@ class Hash
             source: $hash['source'] ?? null,
             cropSettings: unserialize($hash['crop_settings'] ?? 'a:0:{}'),
             watermarkText: $hash['watermark_text'] ?? null,
+            altTextOverride: $hash['alt_text_override'] ?? null,
+            captionOverride: $hash['caption_override'] ?? null,
         );
     }
 

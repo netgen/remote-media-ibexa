@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Netgen\Bundle\RemoteMediaIbexaBundle\DependencyInjection;
 
 use Ibexa\Bundle\Core\DependencyInjection\Configuration\SiteAccessAware\Configuration as SiteAccessConfiguration;
+use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
+use Symfony\Component\Config\Definition\Builder\NodeBuilder;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 
 use function array_is_list;
@@ -17,54 +19,53 @@ final class Configuration extends SiteAccessConfiguration
     {
         $treeBuilder = new TreeBuilder('netgen_remote_media_ibexa');
 
+        /** @var ArrayNodeDefinition $rootNode */
+        $rootNode = $treeBuilder->getRootNode();
+
+        /** @var NodeBuilder $scopeNode */
+        $scopeNode = $this->generateScopeBaseNode($rootNode);
+
         // Settings deliberately have no defaults in the tree (defaults are in default_settings.yaml),
         // so a scope only overrides the settings it defines.
-        $this->generateScopeBaseNode($treeBuilder->getRootNode())
+        $richTextNode = $scopeNode
             ->arrayNode('richtext')
                 ->info('Remote media element in the RichText (CKEditor 5) field')
-                ->children()
-                    ->scalarNode('variation_group')
-                        ->info('Variation group used for cropping in the editor and for rendering')
-                        ->cannotBeEmpty()
-                    ->end()
-                    ->scalarNode('location_source')
-                        ->info('Source stored on remote resource locations created from RichText')
-                    ->end()
-                    ->variableNode('allowed_types')
-                        ->validate()
-                            ->ifTrue(static fn (mixed $value): bool => !self::isStringList($value))
-                            ->thenInvalid('Expected a list of strings, got %s')
-                        ->end()
-                    ->end()
-                    ->variableNode('allowed_visibilities')
-                        ->validate()
-                            ->ifTrue(static fn (mixed $value): bool => !self::isStringList($value))
-                            ->thenInvalid('Expected a list of strings, got %s')
-                        ->end()
-                    ->end()
-                    ->variableNode('allowed_tags')
-                        ->validate()
-                            ->ifTrue(static fn (mixed $value): bool => !self::isStringList($value))
-                            ->thenInvalid('Expected a list of strings, got %s')
-                        ->end()
-                    ->end()
-                    ->booleanNode('disable_upload')
-                        ->info('Upload is also disabled for users without the ngrm/upload policy')
-                    ->end()
-                    ->scalarNode('folder')
-                        ->info('Folder path for browsing and uploading, null for no restriction')
-                    ->end()
-                    ->scalarNode('parent_folder')
-                        ->info('Parent folder path for browsing and uploading, null for no restriction')
-                    ->end()
-                    ->variableNode('upload_context')
-                        ->validate()
-                            ->ifTrue(static fn (mixed $value): bool => !is_array($value))
-                            ->thenInvalid('Expected a map of context keys to values, got %s')
-                        ->end()
-                    ->end()
-                ->end()
-            ->end();
+                ->children();
+
+        $richTextNode
+            ->scalarNode('variation_group')
+                ->info('Variation group used for cropping in the editor and for rendering')
+                ->cannotBeEmpty();
+
+        $richTextNode
+            ->scalarNode('location_source')
+                ->info('Source stored on remote resource locations created from RichText');
+
+        foreach (['allowed_types', 'allowed_visibilities', 'allowed_tags'] as $name) {
+            $richTextNode
+                ->variableNode($name)
+                    ->validate()
+                        ->ifTrue(static fn (mixed $value): bool => !self::isStringList($value))
+                        ->thenInvalid('Expected a list of strings, got %s');
+        }
+
+        $richTextNode
+            ->booleanNode('disable_upload')
+                ->info('Upload is also disabled for users without the ngrm/upload policy');
+
+        $richTextNode
+            ->scalarNode('folder')
+                ->info('Folder path for browsing and uploading, null for no restriction');
+
+        $richTextNode
+            ->scalarNode('parent_folder')
+                ->info('Parent folder path for browsing and uploading, null for no restriction');
+
+        $richTextNode
+            ->variableNode('upload_context')
+                ->validate()
+                    ->ifTrue(static fn (mixed $value): bool => !is_array($value))
+                    ->thenInvalid('Expected a map of context keys to values, got %s');
 
         return $treeBuilder;
     }

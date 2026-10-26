@@ -52,6 +52,7 @@ final class ConfigurationProvider implements Provider
             ]),
         );
 
+        /** @var array<string, mixed> $config */
         $config = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
         return [
@@ -62,7 +63,7 @@ final class ConfigurationProvider implements Provider
                 'allowedTags' => $this->getSetting('allowed_tags'),
                 'parentFolder' => $this->resolveFolder($this->getSetting('parent_folder')),
                 'folder' => $this->resolveFolder($this->getSetting('folder')),
-                'disableUpload' => $this->getSetting('disable_upload') || !$this->canUpload(),
+                'disableUpload' => $this->getSetting('disable_upload') === true || !$this->canUpload(),
             ],
             'source' => $this->getSetting('location_source'),
             'endpoints' => [

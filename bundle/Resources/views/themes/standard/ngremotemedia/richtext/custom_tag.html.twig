@@ -1,7 +1,7 @@
 {# Renders the "ngremotemedia" RichText custom tag, override per design in "themes/<theme>/ngremotemedia/richtext/custom_tag.html.twig" #}
 {% set location_id = params.locationId|default('') %}
 {% set location = location_id matches '/^\\d+$/' ? ngrm_remote_resource_location(location_id) : null %}
-{% set caption = location.remoteResource.caption|default('') %}
+{% set caption = location.caption|default('') %}
 
 {% if caption is not empty %}<figure class="ngremotemedia-figure">{% endif %}
 

@@ -36,8 +36,8 @@ final class ResourceRegistry
     /** @var array<string, int> */
     private array $ids = [];
 
-    /** @var array<int, bool> */
-    private array $hasAltText = [];
+    /** @var array<int, string> non-empty alt texts of stored resources */
+    private array $altTexts = [];
 
     /** @var array<int, string> non-empty captions of stored resources */
     private array $captions = [];
@@ -53,7 +53,7 @@ final class ResourceRegistry
     public function load(): void
     {
         $this->ids = [];
-        $this->hasAltText = [];
+        $this->altTexts = [];
         $this->captions = [];
         $this->added = [];
 
@@ -62,13 +62,7 @@ final class ResourceRegistry
         );
 
         foreach ($rows as $row) {
-            $id = (int) $row['id'];
-            $this->ids[(string) $row['remote_id']] = $id;
-            $this->hasAltText[$id] = ($row['alt_text'] ?? '') !== '';
-
-            if (($row['caption'] ?? '') !== '') {
-                $this->captions[$id] = (string) $row['caption'];
-            }
+            $this->remember((string) $row['remote_id'], (int) $row['id'], $row['alt_text'] ?? null, $row['caption'] ?? null);
         }
     }
 
@@ -86,14 +80,24 @@ final class ResourceRegistry
     }
 
     /**
+     * Alt text of a stored or added resource, null when it has none.
+     */
+    public function getAltText(string $remoteId): ?string
+    {
+        if (isset($this->added[$remoteId])) {
+            return $this->toNonEmpty($this->added[$remoteId]->getAltText());
+        }
+
+        return $this->altTexts[$this->ids[$remoteId] ?? 0] ?? null;
+    }
+
+    /**
      * Caption of a stored or added resource, null when it has none.
      */
     public function getCaption(string $remoteId): ?string
     {
         if (isset($this->added[$remoteId])) {
-            $caption = $this->added[$remoteId]->getCaption();
-
-            return ($caption ?? '') === '' ? null : $caption;
+            return $this->toNonEmpty($this->added[$remoteId]->getCaption());
         }
 
         return $this->captions[$this->ids[$remoteId] ?? 0] ?? null;
@@ -132,56 +136,12 @@ final class ResourceRegistry
     }
 
     /**
-     * Sets the alt text and caption of a resource which doesn't have them yet. Netgen Remote Media 2 had them
-     * per field value and per RichText tag, Netgen Remote Media 3 has them per resource, so the first non-empty
-     * one is kept.
-     */
-    public function complete(RemoteResource $resource, ?string $altText, ?string $caption): void
-    {
-        if (isset($this->added[$resource->getRemoteId()])) {
-            if (($resource->getAltText() ?? '') === '' && $altText !== null) {
-                $resource->setAltText($altText);
-            }
-
-            if (($resource->getCaption() ?? '') === '' && $caption !== null) {
-                $resource->setCaption($caption);
-            }
-
-            return;
-        }
-
-        $id = $this->ids[$resource->getRemoteId()] ?? null;
-
-        if ($id === null) {
-            return;
-        }
-
-        $connection = $this->entityManager->getConnection();
-
-        if (!($this->hasAltText[$id] ?? false) && $altText !== null) {
-            $connection->update('ngrm_remote_resource', ['alt_text' => $altText], ['id' => $id]);
-            $this->hasAltText[$id] = true;
-        }
-
-        if (!isset($this->captions[$id]) && $caption !== null) {
-            $connection->update('ngrm_remote_resource', ['caption' => $caption], ['id' => $id]);
-            $this->captions[$id] = $caption;
-        }
-    }
-
-    /**
      * To call after the entity manager is flushed: from here on, added resources are used through references.
      */
     public function commit(): void
     {
         foreach ($this->added as $remoteId => $resource) {
-            $id = (int) $resource->getId();
-            $this->ids[$remoteId] = $id;
-            $this->hasAltText[$id] = ($resource->getAltText() ?? '') !== '';
-
-            if (($resource->getCaption() ?? '') !== '') {
-                $this->captions[$id] = (string) $resource->getCaption();
-            }
+            $this->remember($remoteId, (int) $resource->getId(), $resource->getAltText(), $resource->getCaption());
         }
 
         $this->added = [];
@@ -231,5 +191,26 @@ final class ResourceRegistry
         }
 
         return $failed;
+    }
+
+    private function remember(string $remoteId, int $id, ?string $altText, ?string $caption): void
+    {
+        $this->ids[$remoteId] = $id;
+
+        $altText = $this->toNonEmpty($altText);
+        $caption = $this->toNonEmpty($caption);
+
+        if ($altText !== null) {
+            $this->altTexts[$id] = $altText;
+        }
+
+        if ($caption !== null) {
+            $this->captions[$id] = $caption;
+        }
+    }
+
+    private function toNonEmpty(?string $value): ?string
+    {
+        return ($value ?? '') === '' ? null : $value;
     }
 }

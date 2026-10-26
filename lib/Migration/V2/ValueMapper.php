@@ -12,6 +12,7 @@ use function is_array;
 use function is_numeric;
 use function is_scalar;
 use function is_string;
+use function trim;
 
 /**
  * Maps Netgen Remote Media 2 data to its Netgen Remote Media 3 counterparts.
@@ -86,6 +87,20 @@ final class ValueMapper
         ];
 
         return array_filter($data, static fn (mixed $item): bool => $item !== null && $item !== '');
+    }
+
+    /**
+     * Location override (alt text or caption) for the value of a Netgen Remote Media 2 usage, a field value or
+     * a RichText tag: the value when it differs from the value of the resource on Cloudinary, otherwise null, so
+     * the location uses the value of the resource.
+     */
+    public function toOverride(?string $value, ?string $resourceValue): ?string
+    {
+        if ($value === null || trim($value) === '' || $value === $resourceValue) {
+            return null;
+        }
+
+        return $value;
     }
 
     /**

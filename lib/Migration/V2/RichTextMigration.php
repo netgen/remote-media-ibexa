@@ -42,8 +42,8 @@ final class RichTextMigration
     private const VERSION_TABLE = 'ezcontentobject_version';
 
     /**
-     * IDs of locations created during the run, by field ID, remote ID and crop settings, so versions of a field
-     * share the location of the same tag, as with RichText edited with Netgen Remote Media 3.
+     * IDs of locations created during the run, by field ID, remote ID, crop settings and caption override, so
+     * versions of a field share the location of the same tag, as with RichText edited with Netgen Remote Media 3.
      *
      * @var array<string, int>
      */
@@ -203,66 +203,6 @@ final class RichTextMigration
                 count($tags),
             );
         }
-
-        foreach ($this->getConvertedCaptions($tags, $leftTags) as [$remoteId, $caption]) {
-            $resource = $this->resourceRegistry->get($remoteId);
-
-            if ($resource === null) {
-                continue;
-            }
-
-            $this->resourceRegistry->complete($resource, null, $caption);
-            $resourceCaption = $this->resourceRegistry->getCaption($remoteId);
-
-            if ($resourceCaption !== $caption) {
-                $report->warnings[] = sprintf(
-                    '%s: caption "%s" not used, resource "%s" already has the caption "%s"',
-                    $this->describe($row),
-                    $caption,
-                    $remoteId,
-                    (string) $resourceCaption,
-                );
-            }
-        }
-    }
-
-    /**
-     * Remote IDs and captions of converted tags.
-     *
-     * @param \Netgen\RemoteMediaIbexa\Migration\V2\RichTextTag[] $tags
-     * @param \Netgen\RemoteMediaIbexa\Migration\V2\RichTextTag[] $leftTags
-     *
-     * @return array<int, array{0: string, 1: string}>
-     */
-    private function getConvertedCaptions(array $tags, array $leftTags): array
-    {
-        $leftCaptions = [];
-
-        foreach ($leftTags as $tag) {
-            $leftCaptions[] = $this->getRemoteId($tag) . '|' . $tag->getCaption();
-        }
-
-        $captions = [];
-
-        foreach ($tags as $tag) {
-            $caption = $tag->getCaption();
-
-            if ($caption === null) {
-                continue;
-            }
-
-            $index = array_search($this->getRemoteId($tag) . '|' . $caption, $leftCaptions, true);
-
-            if ($index !== false) {
-                unset($leftCaptions[$index]);
-
-                continue;
-            }
-
-            $captions[] = [$this->getRemoteId($tag), $caption];
-        }
-
-        return $captions;
     }
 
     /**
@@ -282,13 +222,16 @@ final class RichTextMigration
         }
 
         $cropSettings = $this->valueMapper->toCropSettings($tag->getCoords());
-        $key = $fieldId . '|' . $remoteId . '|' . serialize($cropSettings);
+        // Netgen Remote Media 2 never stored RichText captions on Cloudinary, so they are kept on the location
+        $captionOverride = $this->valueMapper->toOverride($tag->getCaption(), $this->resourceRegistry->getCaption($remoteId));
+        $key = $fieldId . '|' . $remoteId . '|' . serialize([$cropSettings, $captionOverride]);
 
         if (!isset($this->locationIds[$key])) {
             $location = new RemoteResourceLocation(
                 $resource,
                 (string) $this->configResolver->getParameter('richtext.location_source', 'netgen_remote_media_ibexa'),
                 $cropSettings,
+                captionOverride: $captionOverride,
             );
 
             $this->entityManager->persist($location);

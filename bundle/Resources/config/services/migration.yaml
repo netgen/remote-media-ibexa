@@ -33,7 +33,7 @@ services:
             - '@Netgen\RemoteMediaIbexa\Migration\V2\ValueMapper'
             - '@Netgen\RemoteMediaIbexa\Migration\V2\RichTextConverter'
             - '@ibexa.richtext.validator.docbook'
-            - '@Ibexa\FieldTypeRichText\RichText\Validator\CustomTemplateValidator'
+            - '@netgen_remote_media_ibexa.migration.v2.richtext_custom_template_validator'
             - '@ibexa.config.resolver'
 
     Netgen\Bundle\RemoteMediaIbexaBundle\Command\MigrateV2Command:

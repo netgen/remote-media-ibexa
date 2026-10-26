@@ -14,7 +14,8 @@
     "ibexa/core": "^4.4",
     "ibexa/admin-ui": "^4.4",
     "ibexa/fieldtype-richtext": "^4.4",
-    "netgen/remote-media-bundle": "^3.0"
+    "netgen/remote-media-bundle": "^3.0",
+    "symfony/polyfill-mbstring": "^1.31"
   },
   "require-dev": {
     "netgen/layouts-coding-standard": "^2.0",

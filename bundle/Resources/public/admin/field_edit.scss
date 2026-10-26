@@ -36,7 +36,7 @@ $base-font-size: 16px;
             padding-top: 0;
         }
 
-        input[type=text].media-alttext, input[type=text].media-caption, input[type=text].media-watermarktext {
+        input[type=text].media-alttext, input[type=text].media-caption, input[type=text].media-alttext-override, input[type=text].media-caption-override, input[type=text].media-watermarktext {
             border: 0.0625rem solid #cfd1d3;
             border-radius: 0.625rem;
             color: #131c26;

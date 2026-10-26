@@ -149,17 +149,19 @@ final class FieldMigration
                     continue;
                 }
 
-                $this->resourceRegistry->complete(
-                    $resource,
-                    $data['context']['custom']['alt_text'] ?? null,
-                    $data['context']['custom']['caption'] ?? null,
-                );
-
                 $location = new RemoteResourceLocation(
                     $resource,
                     // Same as the default location source of the field type's edit form
                     'ibexa_content_' . $row['content_type_identifier'] . '_' . $row['field_identifier'],
                     $this->valueMapper->toCropSettings($value['variations'] ?? null),
+                    altTextOverride: $this->valueMapper->toOverride(
+                        $data['context']['custom']['alt_text'] ?? null,
+                        $this->resourceRegistry->getAltText($remoteId),
+                    ),
+                    captionOverride: $this->valueMapper->toOverride(
+                        $data['context']['custom']['caption'] ?? null,
+                        $this->resourceRegistry->getCaption($remoteId),
+                    ),
                 );
 
                 $this->entityManager->persist(new NgRemoteMediaContentLink($fieldId, $versionNo, $location));

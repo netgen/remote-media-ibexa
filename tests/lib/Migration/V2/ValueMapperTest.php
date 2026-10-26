@@ -90,6 +90,30 @@ final class ValueMapperTest extends TestCase
         );
     }
 
+    #[DataProvider('provideOverrideCases')]
+    public function testToOverride(?string $value, ?string $resourceValue, ?string $expected): void
+    {
+        self::assertSame($expected, $this->mapper->toOverride($value, $resourceValue));
+    }
+
+    /**
+     * @return iterable<string, array{0: ?string, 1: ?string, 2: ?string}>
+     */
+    public static function provideOverrideCases(): iterable
+    {
+        yield 'different' => ['Usage caption', 'Resource caption', 'Usage caption'];
+
+        yield 'resource without value' => ['Usage caption', null, 'Usage caption'];
+
+        yield 'same' => ['Caption', 'Caption', null];
+
+        yield 'empty' => ['', 'Resource caption', null];
+
+        yield 'whitespace' => ['  ', 'Resource caption', null];
+
+        yield 'none' => [null, 'Resource caption', null];
+    }
+
     public function testToCropSettings(): void
     {
         $cropSettings = $this->mapper->toCropSettings(

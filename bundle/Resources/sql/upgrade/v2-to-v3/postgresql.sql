@@ -11,7 +11,7 @@ COMMENT ON COLUMN ngrm_remote_resource.metadata IS '(DC2Type:array)';
 COMMENT ON COLUMN ngrm_remote_resource.context IS '(DC2Type:array)';
 COMMENT ON COLUMN ngrm_remote_resource.created_at IS '(DC2Type:datetime_immutable)';
 COMMENT ON COLUMN ngrm_remote_resource.updated_at IS '(DC2Type:datetime_immutable)';
-CREATE TABLE ngrm_remote_resource_location (id SERIAL NOT NULL, remote_resource_id INT DEFAULT NULL, source VARCHAR(255) DEFAULT NULL, crop_settings TEXT NOT NULL, watermark_text TEXT DEFAULT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, updated_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, PRIMARY KEY(id));
+CREATE TABLE ngrm_remote_resource_location (id SERIAL NOT NULL, remote_resource_id INT DEFAULT NULL, source VARCHAR(255) DEFAULT NULL, crop_settings TEXT NOT NULL, watermark_text TEXT DEFAULT NULL, alt_text_override TEXT DEFAULT NULL, caption_override TEXT DEFAULT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, updated_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, PRIMARY KEY(id));
 CREATE INDEX IDX_76616F4846147E03 ON ngrm_remote_resource_location (remote_resource_id);
 COMMENT ON COLUMN ngrm_remote_resource_location.crop_settings IS '(DC2Type:array)';
 COMMENT ON COLUMN ngrm_remote_resource_location.created_at IS '(DC2Type:datetime_immutable)';

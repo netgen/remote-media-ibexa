@@ -59,8 +59,8 @@ which render as invalid data.
    php bin/console netgen:remote_media:refresh
    ```
 
-   It replaces the alt text and caption of every resource with the ones on Cloudinary. Netgen Remote Media 2
-   never stored RichText captions on Cloudinary, so this removes the captions taken over from RichText (see below).
+   It replaces the alt text and caption of every resource with the ones on Cloudinary. Alt text and caption
+   overrides of locations are not changed.
 
 6. When everything is checked, drop the table of Netgen Remote Media 2:
 
@@ -72,9 +72,14 @@ which render as invalid data.
 
 * Resources are created from the field values, without requests to Cloudinary. Resources used only in RichText
   are loaded from Cloudinary, in batches of 100.
-* Netgen Remote Media 2 kept the alt text and caption in each field value and each RichText tag, Netgen Remote
-  Media 3 keeps them on the resource: the first non-empty one is used, the other ones are listed in the output.
-  The RichText custom tag template renders the caption of the resource.
+* Netgen Remote Media 2 kept the alt text and caption in each field value (per version and translation) and the
+  caption in each RichText tag. Netgen Remote Media 3 keeps them on the resource (synchronized with Cloudinary)
+  and, per usage, as alt text and caption overrides of a location. A resource created from a field value gets the
+  alt text and caption of that field value, which Netgen Remote Media 2 took from Cloudinary, a resource used only
+  in RichText gets the ones loaded from Cloudinary. A field value or tag whose alt text or caption is not empty and
+  differs from the one of the resource gets it as the override of its location, so nothing is lost and
+  `netgen:remote_media:refresh` doesn't change it. Netgen Remote Media 2 never stored RichText captions on
+  Cloudinary, so RichText captions mostly become overrides.
 * The MD5 hash of the file is the Cloudinary etag where the field value has it, otherwise empty:
   `netgen:remote_media:refresh` sets it from Cloudinary.
 * Each field version gets its own location, with the crops of the field value. The location source is
@@ -82,7 +87,9 @@ which render as invalid data.
 * In RichText, all versions of a field share one location per resource and crop, with the source configured in
   `richtext.location_source`. An inline tag replaces its paragraph: the paragraph's content before and after it
   stays in a paragraph before and after the tag. `variation` becomes `variationName`, `cssclass` becomes
-  `cssClass`, `align` becomes `alignment` (`middle` becomes `center`), and the caption goes to the resource.
+  `cssClass`, `align` becomes `alignment` (`middle` becomes `center`), and the caption becomes the caption
+  override of the location (see above). Tags with the same resource and crops but different captions get
+  different locations.
 * A converted RichText field is stored only if it doesn't add RichText validation errors.
 * Fields and tags which can't be migrated are listed in the output and left as they are, e.g. resources which
   no longer exist on Cloudinary, or whose URL, name or filename is longer than the 255 characters Netgen Remote

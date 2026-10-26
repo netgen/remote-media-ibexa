@@ -2,7 +2,7 @@
 {% set location_id = params.locationId|default('') %}
 {% set location = location_id matches '/^\\d+$/' ? ngrm_remote_resource_location(location_id) : null %}
 {% set alignment = params.alignment|default(null) in ['left', 'center', 'right', 'justify'] ? params.alignment : null %}
-{% set caption = location.remoteResource.caption|default('') %}
+{% set caption = location.caption|default('') %}
 
 {% if location is null or location.remoteResource.public or ngrm_ibexa_can_read_protected() %}
     {% if location is not null and location.remoteResource.protected %}

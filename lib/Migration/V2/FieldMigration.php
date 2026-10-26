@@ -18,7 +18,11 @@ use Netgen\RemoteMediaIbexa\FieldType\Type;
 use Throwable;
 
 use function array_column;
+use function array_diff;
 use function array_key_last;
+use function array_keys;
+use function array_unique;
+use function array_values;
 use function count;
 use function is_array;
 use function json_decode;
@@ -32,6 +36,10 @@ use const JSON_THROW_ON_ERROR;
  * Migrates values of the Netgen Remote Media 2 field type (JSON in the field's data_text) to remote resources,
  * remote resource locations and content links of Netgen Remote Media 3.
  *
+ * Resources which aren't stored yet are loaded from the remote, so the alt text and caption of field values are
+ * compared with the ones on the remote. A resource which can't be loaded from the remote is created from the first
+ * field value using it, so the field is migrated anyway.
+ *
  * Archived versions are not migrated: their fields are empty with Netgen Remote Media 3.
  */
 final class FieldMigration
@@ -41,6 +49,14 @@ final class FieldMigration
     private const VERSION_TABLE = 'ezcontentobject_version';
     private const FIELD_DEFINITION_TABLE = 'ezcontentclass_attribute';
     private const CONTENT_TYPE_TABLE = 'ezcontentclass';
+
+    /**
+     * Remote IDs requested from the remote during the run, so resources which couldn't be stored from the remote
+     * aren't requested again.
+     *
+     * @var array<string, true>
+     */
+    private array $requestedRemoteIds = [];
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
@@ -90,6 +106,7 @@ final class FieldMigration
     {
         $report = new Report();
         $this->resourceRegistry->load();
+        $this->requestedRemoteIds = [];
 
         $lastId = 0;
         $lastVersion = 0;
@@ -117,31 +134,35 @@ final class FieldMigration
      */
     private function migrateBatch(array $rows, Report $report): void
     {
-        $connection = $this->getConnection();
         $migrated = $this->loadMigratedFields(array_column($rows, 'id'));
+        $fields = [];
 
+        foreach ($rows as $row) {
+            if (isset($migrated[(int) $row['id']][(int) $row['version']])) {
+                ++$report->skipped;
+
+                continue;
+            }
+
+            $value = json_decode((string) ($row['data_text'] ?? ''), true);
+            $remoteId = is_array($value) ? $this->valueMapper->toRemoteIdFromFieldValue($value) : null;
+
+            if (!is_array($value) || $remoteId === null) {
+                ++$report->empty;
+
+                continue;
+            }
+
+            $fields[] = [$row, $value, $remoteId];
+        }
+
+        $this->storeFromRemote(array_column($fields, 2), $report);
+
+        $connection = $this->getConnection();
         $connection->beginTransaction();
 
         try {
-            foreach ($rows as $row) {
-                $fieldId = (int) $row['id'];
-                $versionNo = (int) $row['version'];
-
-                if (isset($migrated[$fieldId][$versionNo])) {
-                    ++$report->skipped;
-
-                    continue;
-                }
-
-                $value = json_decode((string) ($row['data_text'] ?? ''), true);
-                $remoteId = is_array($value) ? $this->valueMapper->toRemoteIdFromFieldValue($value) : null;
-
-                if (!is_array($value) || $remoteId === null) {
-                    ++$report->empty;
-
-                    continue;
-                }
-
+            foreach ($fields as [$row, $value, $remoteId]) {
                 $data = $this->valueMapper->toCloudinaryData($value);
                 $resource = $this->resourceRegistry->get($remoteId) ?? $this->createResource($data, $row, $report);
 
@@ -164,7 +185,7 @@ final class FieldMigration
                     ),
                 );
 
-                $this->entityManager->persist(new NgRemoteMediaContentLink($fieldId, $versionNo, $location));
+                $this->entityManager->persist(new NgRemoteMediaContentLink((int) $row['id'], (int) $row['version'], $location));
 
                 ++$report->migrated;
             }
@@ -179,6 +200,27 @@ final class FieldMigration
         } finally {
             $this->entityManager->clear();
         }
+    }
+
+    /**
+     * Stores resources which aren't stored yet from the remote. Every remote ID is requested at most once per run:
+     * resources which can't be stored from the remote are created from field values.
+     *
+     * @param string[] $remoteIds
+     */
+    private function storeFromRemote(array $remoteIds, Report $report): void
+    {
+        $remoteIds = array_values(array_diff(array_unique($remoteIds), array_keys($this->requestedRemoteIds)));
+
+        foreach ($remoteIds as $remoteId) {
+            $this->requestedRemoteIds[$remoteId] = true;
+        }
+
+        foreach ($this->resourceRegistry->storeFromRemote($remoteIds) as $reason) {
+            $report->warnings[] = sprintf('Fields: %s, creating the resource from a field value instead', $reason);
+        }
+
+        $this->entityManager->clear();
     }
 
     /**

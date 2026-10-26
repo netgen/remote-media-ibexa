@@ -22,7 +22,8 @@ final class Report
     public int $empty = 0;
 
     /**
-     * Fields which couldn't be migrated, or were migrated only partially.
+     * Fields which couldn't be migrated, or were migrated only partially, and resources which couldn't be
+     * loaded from the remote.
      *
      * @var string[]
      */

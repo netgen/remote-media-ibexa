@@ -6,6 +6,10 @@ This bundle provides an integration of [Netgen Remote Media](https://github.com/
 
 [INSTALL.md](INSTALL.md)
 
+## Remote media in the RichText field
+
+[RICHTEXT.md](RICHTEXT.md)
+
 ## Running tests
 
 Running tests requires that you have complete vendors installed, so run

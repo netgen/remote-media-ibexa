@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Netgen\Bundle\RemoteMediaIbexaBundle\DependencyInjection;
 
+use Ibexa\Bundle\Core\DependencyInjection\Configuration\SiteAccessAware\ConfigurationProcessor;
+use Ibexa\Bundle\Core\DependencyInjection\Configuration\SiteAccessAware\ContextualizerInterface;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Config\Loader\DelegatingLoader;
 use Symfony\Component\Config\Loader\LoaderResolver;
@@ -36,6 +38,19 @@ class NetgenRemoteMediaIbexaExtension extends Extension implements PrependExtens
         );
 
         $loader->load('services/**/*.yaml', 'glob');
+        $loader->load('default_settings.yaml');
+
+        $config = $this->processConfiguration(new Configuration(), $configs);
+
+        $processor = new ConfigurationProcessor($container, $this->getAlias());
+        $processor->mapConfig(
+            $config,
+            static function (array $scopeSettings, string $currentScope, ContextualizerInterface $contextualizer): void {
+                foreach ($scopeSettings['richtext'] ?? [] as $key => $value) {
+                    $contextualizer->setContextualParameter('richtext.' . $key, $currentScope, $value);
+                }
+            },
+        );
     }
 
     public function prepend(ContainerBuilder $container): void
@@ -44,6 +59,7 @@ class NetgenRemoteMediaIbexaExtension extends Extension implements PrependExtens
             'ibexa.yaml' => 'ibexa',
             'remote_media.yaml' => 'netgen_remote_media',
             'doctrine.yaml' => 'doctrine',
+            'ibexa_fieldtype_richtext.yaml' => 'ibexa_fieldtype_richtext',
         ];
 
         foreach ($prependConfigs as $configFile => $prependConfig) {

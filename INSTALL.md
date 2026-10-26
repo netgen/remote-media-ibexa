@@ -34,3 +34,13 @@ php bin/console doctrine:schema:update
 ```
 
 **Note:** Use the command with `--dump-sql` first to check that it will do only modifications related to this bundle, and then use it with parameter `--force` to do the actual changes.
+
+## Build admin assets
+
+The RichText editor plugin is compiled into the Ibexa RichText editor build, so rebuild the admin assets:
+
+```
+php bin/console ibexa:encore:compile --frontend-configs-name ibexa,internals,libs,richtext
+```
+
+See [RICHTEXT.md](RICHTEXT.md) for the RichText configuration.

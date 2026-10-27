@@ -39,10 +39,14 @@
     "phpstan-tests": "@php vendor/bin/phpstan analyse -c phpstan.tests.neon --level=8 --ansi tests",
     "psalm": "@php vendor/bin/psalm -c psalm.xml --show-info=false"
   },
+  "suggest": {
+    "doctrine/doctrine-migrations-bundle": "To create the database tables with the shipped migrations"
+  },
   "autoload": {
     "psr-4": {
       "Netgen\\RemoteMediaIbexa\\": "lib/",
-      "Netgen\\Bundle\\RemoteMediaIbexaBundle\\": "bundle/"
+      "Netgen\\Bundle\\RemoteMediaIbexaBundle\\": "bundle/",
+      "Netgen\\RemoteMediaIbexa\\Migrations\\": "migrations/"
     }
   },
   "autoload-dev": {

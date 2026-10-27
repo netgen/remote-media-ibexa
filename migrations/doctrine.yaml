@@ -1,0 +1,7 @@
+migrations_paths:
+    Netgen\RemoteMediaIbexa\Migrations\Doctrine: Doctrine
+
+table_storage:
+    table_name: ngrm_ibexa_migration_versions
+
+transactional: false

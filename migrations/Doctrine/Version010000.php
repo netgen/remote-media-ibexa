@@ -13,8 +13,6 @@ final class Version010000 extends AbstractMigration
     {
         $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'mysql', 'Migration can only be executed safely on MySQL.');
 
-        // ngrm_remote_media_content_link table
-
         $this->addSql(
             <<<'EOT'
             CREATE TABLE ngrm_remote_media_content_link (

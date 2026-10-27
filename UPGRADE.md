@@ -43,7 +43,20 @@ The core bundle changed too, see the `netgen/remote-media-bundle` [CHANGELOG](ht
 ### Database
 
 * The field data is not stored in the `ngremotemedia_field_link` table anymore. The new table `ngrm_remote_media_content_link` references the `ngrm_remote_resource_location` table of Netgen Remote Media.
-* <migrations: added by the migrations PR>
+* The tables are created by the Doctrine migration shipped with the bundle (own configuration `migrations/doctrine.yaml`, version table `ngrm_ibexa_migration_versions`).
+* Run the migrations of `netgen/remote-media-bundle` first (see its UPGRADE), then the migrations of this bundle:
+
+    ```
+    php bin/console doctrine:migrations:migrate --configuration=vendor/netgen/remote-media-ibexa/migrations/doctrine.yaml
+    ```
+
+* If the `ngrm_remote_media_content_link` table already exists (for example, created with `doctrine:schema:update` on an untagged version of this bundle), the migration fails. Create the version table, mark the migration as executed and run the migrations again:
+
+    ```
+    php bin/console doctrine:migrations:sync-metadata-storage --configuration=vendor/netgen/remote-media-ibexa/migrations/doctrine.yaml
+    php bin/console doctrine:migrations:version 'Netgen\RemoteMediaIbexa\Migrations\Doctrine\Version010000' --add --configuration=vendor/netgen/remote-media-ibexa/migrations/doctrine.yaml
+    php bin/console doctrine:migrations:migrate --configuration=vendor/netgen/remote-media-ibexa/migrations/doctrine.yaml
+    ```
 * Data migration from the v2 data (`ngremotemedia_field_link`) to the new tables is not part of 1.0.0, v2 data is not migrated automatically.
 
 ### Breaking changes

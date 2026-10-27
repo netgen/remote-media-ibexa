@@ -25,12 +25,13 @@ return $bundles;
 
 This bundle will automatically install [Netgen Remote Media bundle](https://github.com/netgen/NetgenRemoteMediaBundle/tree/3.0) so you have to follow it's [install instructions](https://github.com/netgen/NetgenRemoteMediaBundle/blob/3.0/docs/INSTALL.md) in order to properly configure it, add required routing etc.
 
-## Import database tables
+## Database
 
-This bundle stores used resources in a separate table in the database. Use the following command to update your database:
+The bundle ships a Doctrine migration which creates its database tables. It requires MySQL or MariaDB and `doctrine/doctrine-migrations-bundle`:
 
 ```
-php bin/console doctrine:schema:update
+composer require doctrine/doctrine-migrations-bundle
+php bin/console doctrine:migrations:migrate --configuration=vendor/netgen/remote-media-ibexa/migrations/doctrine.yaml
 ```
 
-**Note:** Use the command with `--dump-sql` first to check that it will do only modifications related to this bundle, and then use it with parameter `--force` to do the actual changes.
+Run the migrations of `netgen/remote-media-bundle` first: the table of this bundle references `ngrm_remote_resource_location`.

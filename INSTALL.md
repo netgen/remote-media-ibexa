@@ -27,10 +27,9 @@ This bundle will automatically install [Netgen Remote Media bundle](https://gith
 
 ## Database
 
-The bundle ships a Doctrine migration which creates its database tables. It requires MySQL or MariaDB and `doctrine/doctrine-migrations-bundle`:
+The bundle ships a Doctrine migration which creates its database tables. It requires MySQL or MariaDB:
 
 ```
-composer require doctrine/doctrine-migrations-bundle
 php bin/console doctrine:migrations:migrate --configuration=vendor/netgen/remote-media-ibexa/migrations/doctrine.yaml
 ```
 

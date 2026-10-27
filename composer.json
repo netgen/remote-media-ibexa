@@ -11,6 +11,7 @@
   ],
   "require": {
     "php": "^8.1",
+    "doctrine/doctrine-migrations-bundle": "^3.2",
     "ibexa/core": "^4.4",
     "ibexa/admin-ui": "^4.4",
     "netgen/remote-media-bundle": "^3.0"
@@ -38,9 +39,6 @@
     "phpstan": "@php vendor/bin/phpstan analyse -c phpstan.neon --level=8 --ansi lib bundle",
     "phpstan-tests": "@php vendor/bin/phpstan analyse -c phpstan.tests.neon --level=8 --ansi tests",
     "psalm": "@php vendor/bin/psalm -c psalm.xml --show-info=false"
-  },
-  "suggest": {
-    "doctrine/doctrine-migrations-bundle": "To create the database tables with the shipped migrations"
   },
   "autoload": {
     "psr-4": {

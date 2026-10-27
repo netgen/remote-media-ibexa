@@ -33,4 +33,6 @@ The bundle ships a Doctrine migration which creates its database tables. It requ
 php bin/console doctrine:migrations:migrate --configuration=vendor/netgen/remote-media-ibexa/migrations/doctrine.yaml
 ```
 
+Run this command after every update of the bundle, for example as part of your deployment, so new migrations are applied.
+
 Run the migrations of `netgen/remote-media-bundle` first: the table of this bundle references `ngrm_remote_resource_location`.

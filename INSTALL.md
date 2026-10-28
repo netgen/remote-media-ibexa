@@ -33,6 +33,17 @@ The bundle ships a Doctrine migration which creates its database tables. It requ
 php bin/console doctrine:migrations:migrate --configuration=vendor/netgen/remote-media-ibexa/migrations/doctrine.yaml
 ```
 
-Run this command after every update of the bundle, for example as part of your deployment, so new migrations are applied.
+Run this command after every update of the bundle, for example as part of your deployment, so new migrations are applied. You can also run it automatically by adding it to the Composer `post-update-cmd` (and/or `post-install-cmd`) scripts in your `composer.json`, after the command for `netgen/remote-media-bundle`:
+
+```json
+{
+    "scripts": {
+        "post-update-cmd": [
+            "@php bin/console doctrine:migrations:migrate --no-interaction --configuration=vendor/netgen/remote-media-bundle/migrations/doctrine.yaml",
+            "@php bin/console doctrine:migrations:migrate --no-interaction --configuration=vendor/netgen/remote-media-ibexa/migrations/doctrine.yaml"
+        ]
+    }
+}
+```
 
 Run the migrations of `netgen/remote-media-bundle` first: the table of this bundle references `ngrm_remote_resource_location`.

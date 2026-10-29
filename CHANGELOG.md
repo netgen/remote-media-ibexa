@@ -4,6 +4,8 @@
 
 First release. The package contains the Ibexa integration which lived inside `netgen/remote-media-bundle` 2.x (eZ Platform 2.x), rebuilt on top of [Netgen Remote Media](https://github.com/netgen/NetgenRemoteMediaBundle/tree/3.0) 3.x for Ibexa CMS 4.4+. See [UPGRADE](UPGRADE.md) for the upgrade instructions.
 
+The core bundle changed too, see the `netgen/remote-media-bundle` [CHANGELOG](https://github.com/netgen/NetgenRemoteMediaBundle/blob/3.0.1/docs/CHANGELOG.md) (3.0.0 section) and [UPGRADE](https://github.com/netgen/NetgenRemoteMediaBundle/blob/3.0.1/docs/UPGRADE.md) ("Upgrade from 2.0 to 3.0").
+
 ### BC breaks
 
 * requires PHP 8.1+, `ibexa/core` and `ibexa/admin-ui` 4.4+ and `netgen/remote-media-bundle` 3.0+, eZ Platform / `ezsystems/ezpublish-kernel` 7.x is no longer supported
@@ -16,10 +18,8 @@ First release. The package contains the Ibexa integration which lived inside `ne
 * the rich text integration is removed, the `ngremotemedia` `ezrichtext` custom tag, the AlloyEditor plugin and the XmlText converter / XSL are not part of 1.0.0
 * eZ admin UI controllers and the `netgen_remote_media_ezadmin_*` routes are removed, the edit form uses the `RemoteMediaType` Symfony form type from Netgen Remote Media 3.x
 * the 2.x field template `NetgenRemoteMediaBundle::ngremotemedia_content_field.html.twig` is replaced by `@ibexadesign/ngremotemedia/field_view.html.twig`, and its parameters `format`, `alt_text`, `title`, `dimensions` and `link_*` are removed
-* variation group for a field is now the identifier of the content type (siteaccess aware `system.<siteaccess>.image_variations.<content type>` from 2.x is replaced by `netgen_remote_media.image_variations.<content type identifier>`)
-* Twig functions and filters of 2.x (`netgen_remote_*`, `scaling_format`) are replaced by the `ngrm_*` ones from Netgen Remote Media 3.x, the `ezpublish.fieldType.ngremotemedia.*` service IDs are replaced by class name service IDs
+* the `ezpublish.fieldType.ngremotemedia.*` service IDs are replaced by class name service IDs
 * the 2.x console commands `netgen:ngremotemedia:add:data`, `add:field`, `migrate:ezimage` and `refresh:ez_fields` are removed, this package ships no console commands
-* remote resources are never removed when content is deleted, the `netgen_remote_media.remove_unused_resources` parameter is not used by the integration
 * Norwegian translations are not carried over
 
 ### Added

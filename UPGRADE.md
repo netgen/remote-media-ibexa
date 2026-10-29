@@ -4,7 +4,7 @@
 
 Version 1.0 of `netgen/remote-media-ibexa` is the successor of the eZ Platform 2.x integration that was a part of `netgen/remote-media-bundle` 2.x. It targets Ibexa CMS 4.4+ and Netgen Remote Media 3.x. See [CHANGELOG](CHANGELOG.md) for the full list of changes.
 
-The core changes (configuration, Twig functions, provider API, database tables of the resources) are described in the [Netgen Remote Media upgrade instructions](https://github.com/netgen/NetgenRemoteMediaBundle/blob/3.0.1/docs/UPGRADE.md).
+The core bundle changed too, see the `netgen/remote-media-bundle` [CHANGELOG](https://github.com/netgen/NetgenRemoteMediaBundle/blob/3.0.1/docs/CHANGELOG.md) (3.0.0 section) and [UPGRADE](https://github.com/netgen/NetgenRemoteMediaBundle/blob/3.0.1/docs/UPGRADE.md) ("Upgrade from 2.0 to 3.0").
 
 ### Upgrade `composer.json`
 
@@ -37,8 +37,6 @@ The core changes (configuration, Twig functions, provider API, database tables o
     ```
 
 * Move the `ezpublish` configuration to `ibexa`. The Ibexa bundle prepends the field templates (`system.default.field_templates`, content edit `form_templates` for `admin_group`), the `ibexa_admin` image variations and the Doctrine mapping, so remove the 2.x entries for `@NetgenRemoteMedia/ezadminui/...` templates, the `ezrichtext` custom tag and the `alloy_editor` plugin.
-* Siteaccess aware `netgen_remote_media.system.<siteaccess>.image_variations.<content type>` is replaced by `netgen_remote_media.image_variations.<variation group>`. The variation group of an `ngremotemedia` field is the identifier of its content type, so rename your content type groups only if they differ.
-* Add the new `netgen_remote_media.cloudinary.folder_mode` option if your account uses fixed folder mode, see the Netgen Remote Media upgrade instructions.
 * Run `php bin/console assets:install` again and rebuild the Ibexa admin UI assets, the bundle registers its styles through `bundle/Resources/encore/ibexa.config.manager.js`.
 * Assign the new policies `ngrm / read_protected` and `ngrm / upload` to the roles which should see protected resources and upload files. Without them users cannot upload and see protected resources only as a pixelated preview.
 
@@ -63,14 +61,11 @@ The core changes (configuration, Twig functions, provider API, database tables o
 * The legacy bridge extension, the `ezrichtext` custom tag `ngremotemedia`, the AlloyEditor plugin and the XmlText converter have been removed. The rich text integration is not available in 1.0.0.
 * The eZ admin UI controllers have been removed.
 * Commands `netgen:ngremotemedia:add:data`, `netgen:ngremotemedia:add:field`, `netgen:ngremotemedia:migrate:ezimage` and `netgen:ngremotemedia:refresh:ez_fields` have been removed. There are no replacements in 1.0.0.
-* The `netgen_remote_media.remove_unused_resources` parameter has no effect on the integration, remote resources are not removed when the content is deleted.
 
 ### Templates and Twig
 
 * The `ngremotemedia` field template is `@ibexadesign/ngremotemedia/field_view.html.twig` (registered through `field_templates`), replace the override of `NetgenRemoteMediaBundle::ngremotemedia_content_field.html.twig`.
 * Parameters `format` (use `alias` or `variation`), `alt_text`, `title`, `dimensions`, `link_href`, `link_target`, `link_class` and `link_title` of the field template have been removed. The template now accepts `alias` (or `variation`), `raw_variation`, `html_attributes`, `force_video` and `use_thumbnail`.
-* Twig functions `netgen_remote_variation`, `netgen_remote_variation_embed`, `netgen_remote_video`, `netgen_remote_video_embed`, `netgen_remote_video_thumbnail`, `netgen_remote_download`, `netgen_remote_media` and `netgen_remote_media_embed` have been removed. Use the `ngrm_*` functions from Netgen Remote Media, for example `ngrm_remote_resource_variation_html_tag`, `ngrm_remote_resource_html_tag` and `ngrm_remote_resource_download_url`.
-* The `scaling_format` Twig filter has been renamed to `ngrm_scaling_format`.
 * `field.value.resourceId`, `field.value.variations` and other properties of the 2.x value are not available. Use `field.value.remoteResourceLocation` and `field.value.remoteResourceLocation.remoteResource`.
 * `ngrm_ibexa_admin_preview_html_tag` is a new Twig function for the admin UI preview.
 

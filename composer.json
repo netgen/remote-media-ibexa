@@ -11,6 +11,7 @@
   ],
   "require": {
     "php": "^8.1",
+    "doctrine/doctrine-migrations-bundle": "^3.2",
     "ibexa/core": "^4.4",
     "ibexa/admin-ui": "^4.4",
     "netgen/remote-media-bundle": "^3.0"
@@ -42,7 +43,8 @@
   "autoload": {
     "psr-4": {
       "Netgen\\RemoteMediaIbexa\\": "lib/",
-      "Netgen\\Bundle\\RemoteMediaIbexaBundle\\": "bundle/"
+      "Netgen\\Bundle\\RemoteMediaIbexaBundle\\": "bundle/",
+      "Netgen\\RemoteMediaIbexa\\Migrations\\": "migrations/"
     }
   },
   "autoload-dev": {

@@ -33,6 +33,8 @@ The core bundle changed too, see the `netgen/remote-media-bundle` [CHANGELOG](ht
 * Ibexa admin templates for field edit and field view (with a toggle for resource properties), SCSS for both and an Encore config manager
 * Twig function `ngrm_ibexa_admin_preview_html_tag` and the `ibexa_admin` image variation group (`preview`, `preview_image`, `preview_protected`, `preview_protected_image`)
 * the bundle prepends the `ibexa` (field templates), `netgen_remote_media` (variation group) and `doctrine` (entity mapping) configuration
+* Doctrine migration `Version010000` which creates the `ngrm_remote_media_content_link` table, with its own configuration `migrations/doctrine.yaml` and version table `ngrm_ibexa_migration_versions`
+* `doctrine/doctrine-migrations-bundle` is required
 * Croatian translations
 
 ### Changed

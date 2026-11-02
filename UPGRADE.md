@@ -12,7 +12,7 @@ The core bundle changed too, see the `netgen/remote-media-bundle` [CHANGELOG](ht
 * Require both packages and run `composer update`:
 
     ```
-    composer require netgen/remote-media-ibexa:^1.0 netgen/remote-media-bundle:^3.0
+    composer require netgen/remote-media-ibexa:^1.0 netgen/remote-media-bundle:^3.1
     ```
 
 * The legacy bridge extension from `bundle/ezpublish_legacy/ngremotemedia` is not shipped anymore, remove it from your legacy setup.
@@ -43,7 +43,11 @@ The core bundle changed too, see the `netgen/remote-media-bundle` [CHANGELOG](ht
 ### Database
 
 * The field data is not stored in the `ngremotemedia_field_link` table anymore. The new table `ngrm_remote_media_content_link` references the `ngrm_remote_resource_location` table of Netgen Remote Media.
-* <migrations: added by the migrations PR>
+* The `ngrm_remote_media_content_link` table is created by the Doctrine migration `Version030100` of `netgen/remote-media-bundle` (3.1 or newer), this package ships no migrations. Run the migrations of `netgen/remote-media-bundle` after the update:
+
+    ```
+    php bin/console doctrine:migrations:migrate --configuration=vendor/netgen/remote-media-bundle/migrations/doctrine.yaml
+    ```
 * Data migration from the v2 data (`ngremotemedia_field_link`) to the new tables is not part of 1.0.0, v2 data is not migrated automatically.
 
 ### Breaking changes

@@ -27,7 +27,7 @@ This bundle will automatically install [Netgen Remote Media bundle](https://gith
 
 ## Database
 
-This bundle ships no migrations. Its table `ngrm_remote_media_content_link` is created by the Doctrine migrations of `netgen/remote-media-bundle` (3.1 or newer), which also create the tables of Netgen Remote Media itself. It requires MySQL or MariaDB.
+This bundle ships no migrations. Its table `ngrm_remote_media_content_link` is created by the Doctrine migrations of `netgen/remote-media-bundle` (3.0.2 or newer), which also create the tables of Netgen Remote Media itself. It requires MySQL or MariaDB.
 
 Run the migrations of `netgen/remote-media-bundle`:
 

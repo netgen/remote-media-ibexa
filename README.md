@@ -6,6 +6,11 @@ This bundle provides an integration of [Netgen Remote Media](https://github.com/
 
 [INSTALL.md](INSTALL.md)
 
+## Changelog and upgrade instructions
+
+* [CHANGELOG.md](CHANGELOG.md)
+* [UPGRADE.md](UPGRADE.md)
+
 ## Running tests
 
 Running tests requires that you have complete vendors installed, so run

@@ -43,7 +43,14 @@ The core bundle changed too, see the `netgen/remote-media-bundle` [CHANGELOG](ht
 ### Database
 
 * The field data is not stored in the `ngremotemedia_field_link` table anymore. The new table `ngrm_remote_media_content_link` references the `ngrm_remote_resource_location` table of Netgen Remote Media.
-* <migrations: added by the migrations PR>
+* This package ships no migrations. The `ngrm_remote_media_content_link` table is created by the Doctrine migration `Version030002` of `netgen/remote-media-bundle`.
+* All Netgen Remote Media packages share the migrations of `netgen/remote-media-bundle` and the version table `ngrm_migration_versions`. One command then updates the database of every installed package, and the table is always created after `ngrm_remote_resource_location`, which it references.
+* Run the migrations of `netgen/remote-media-bundle` after the update:
+
+    ```
+    php bin/console doctrine:migrations:migrate --configuration=vendor/netgen/remote-media-bundle/migrations/doctrine.yaml
+    ```
+
 * Data migration from the v2 data (`ngremotemedia_field_link`) to the new tables is not part of 1.0.0, v2 data is not migrated automatically.
 
 ### Breaking changes

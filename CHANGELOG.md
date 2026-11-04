@@ -8,7 +8,7 @@ The core bundle changed too, see the `netgen/remote-media-bundle` [CHANGELOG](ht
 
 ### BC breaks
 
-* requires PHP 8.1+, `ibexa/core` and `ibexa/admin-ui` 4.4+ and `netgen/remote-media-bundle` 3.0+, eZ Platform / `ezsystems/ezpublish-kernel` 7.x is no longer supported
+* requires PHP 8.1+, `ibexa/core` and `ibexa/admin-ui` 4.4+ and `netgen/remote-media-bundle` 3.0.2+, eZ Platform / `ezsystems/ezpublish-kernel` 7.x is no longer supported
 * the integration is a separate package `netgen/remote-media-ibexa` (type `symfony-bundle`), activate `Netgen\Bundle\RemoteMediaIbexaBundle\NetgenRemoteMediaIbexaBundle` after the `NetgenRemoteMediaBundle`
 * the field type identifier `ngremotemedia` is kept, but the field type classes now live in `Netgen\RemoteMediaIbexa\` (`lib/`) and the bundle classes in `Netgen\Bundle\RemoteMediaIbexaBundle\` (`bundle/`), `Netgen\Bundle\RemoteMediaBundle\Core\FieldType\RemoteMedia\*` no longer exists
 * the field type value is now `Netgen\RemoteMediaIbexa\FieldType\Value` with a single `remoteResourceLocation` property (`Netgen\RemoteMedia\API\Values\RemoteResourceLocation`), the 2.x `Value`, `Variation`, `InputValue`, `AdminInputValue` and `UpdateFieldHelper` classes are removed
@@ -34,6 +34,7 @@ The core bundle changed too, see the `netgen/remote-media-bundle` [CHANGELOG](ht
 * Twig function `ngrm_ibexa_admin_preview_html_tag` and the `ibexa_admin` image variation group (`preview`, `preview_image`, `preview_protected`, `preview_protected_image`)
 * the bundle prepends the `ibexa` (field templates), `netgen_remote_media` (variation group) and `doctrine` (entity mapping) configuration
 * Croatian translations
+* the `ngrm_remote_media_content_link` table is created by the Doctrine migration `Version030002` of `netgen/remote-media-bundle` 3.0.2+, this package ships no migrations, see [installation instructions](INSTALL.md#database)
 
 ### Changed
 

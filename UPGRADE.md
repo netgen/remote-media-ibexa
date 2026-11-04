@@ -9,10 +9,10 @@ The core bundle changed too, see the `netgen/remote-media-bundle` [CHANGELOG](ht
 ### Upgrade `composer.json`
 
 * Upgrade the project to Ibexa CMS 4.4+ (PHP 8.1+) first, the package requires `ibexa/core` and `ibexa/admin-ui` `^4.4`.
-* Require both packages and run `composer update`:
+* Require the package, Composer installs `netgen/remote-media-bundle` as its dependency:
 
     ```
-    composer require netgen/remote-media-ibexa:^1.0 netgen/remote-media-bundle:^3.0
+    composer require netgen/remote-media-ibexa:^1.0
     ```
 
 * The legacy bridge extension from `bundle/ezpublish_legacy/ngremotemedia` is not shipped anymore, remove it from your legacy setup.

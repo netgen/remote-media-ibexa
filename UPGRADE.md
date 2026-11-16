@@ -1,5 +1,43 @@
 # Netgen Remote Media & Ibexa CMS integration upgrade instructions
 
+## Upgrade from 1.0 to 1.1
+
+Version 1.1 adds remote media to the RichText field, see [RICHTEXT.md](RICHTEXT.md) and [CHANGELOG](CHANGELOG.md).
+
+### Upgrade `composer.json`
+
+* The package requires `netgen/remote-media-bundle` `^3.1.1` (the CKEditor 5 plugin) and `ibexa/fieldtype-richtext` `^4.4`:
+
+    ```
+    composer require netgen/remote-media-ibexa:^1.1
+    ```
+
+### Database
+
+* Run the migrations of `netgen/remote-media-bundle`, 3.1 adds columns to `ngrm_remote_resource_location`:
+
+    ```
+    php bin/console doctrine:migrations:migrate --configuration=vendor/netgen/remote-media-bundle/migrations/doctrine.yaml
+    ```
+
+### Assets
+
+* Clear the cache, so the Encore configuration of the bundle is picked up, and rebuild the `richtext` Encore build, which now contains the CKEditor plugin:
+
+    ```
+    php bin/console cache:clear
+    php bin/console ibexa:encore:compile --config-name richtext
+    ```
+
+### Configuration
+
+* The new `netgen_remote_media_ibexa` semantic configuration is optional, the defaults are listed in [RICHTEXT.md](RICHTEXT.md#configuration). Set `variation_group` in the `default` scope, so the editor and the site use the same variations.
+* The `ngremotemedia` custom tag and the toolbar button are prepended by the bundle, remove `ngremotemedia` custom tag configuration left over from 2.x.
+
+### Templates
+
+* `is_granted('ibexa:ngrm:read_protected')` in the field templates is replaced by `ngrm_ibexa_can_read_protected()`. Update your overrides of `@ibexadesign/ngremotemedia/field_view.html.twig` in the same way if your project has no voter for `ibexa:module:function` strings.
+
 ## Upgrade from netgen/remote-media-bundle 2.x
 
 Version 1.0 of `netgen/remote-media-ibexa` is the successor of the eZ Platform 2.x integration that was a part of `netgen/remote-media-bundle` 2.x. It targets Ibexa CMS 4.4+ and Netgen Remote Media 3.x. See [CHANGELOG](CHANGELOG.md) for the full list of changes.

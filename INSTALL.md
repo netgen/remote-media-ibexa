@@ -44,10 +44,10 @@ Run this command after every update of the bundles, for example as part of your 
 
 ## Build admin assets
 
-The RichText editor plugin is compiled into the Ibexa RichText editor build, so rebuild the admin assets:
+The RichText editor plugin is compiled into the Ibexa RichText editor build (the `richtext` Encore configuration), so rebuild it:
 
 ```
-php bin/console ibexa:encore:compile --frontend-configs-name ibexa,internals,libs,richtext
+php bin/console ibexa:encore:compile --config-name richtext
 ```
 
 See [RICHTEXT.md](RICHTEXT.md) for the RichText configuration.

@@ -19,7 +19,7 @@ use Netgen\RemoteMedia\Exception\RemoteResourceNotFoundException;
 
 use function array_map;
 use function mb_substr;
-use function mb_trim;
+use function trim;
 
 final class SearchFields implements Indexable
 {
@@ -167,6 +167,6 @@ final class SearchFields implements Indexable
 
     private function prepareStringValue(?string $value): ?string
     {
-        return $value !== null ? mb_trim(mb_substr($value, 0, 255)) : null;
+        return $value !== null ? trim(mb_substr($value, 0, 255)) : null;
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Netgen\Bundle\RemoteMediaIbexaBundle\Tests\Twig\Templating\Runtime;
 
+use Ibexa\Core\MVC\Symfony\Security\Authorization\Attribute;
 use Netgen\Bundle\RemoteMediaIbexaBundle\Templating\Twig\Runtime\RemoteMediaIbexaRuntime;
 use Netgen\RemoteMedia\API\ProviderInterface;
 use Netgen\RemoteMedia\API\Values\AuthenticatedRemoteResource;
@@ -32,7 +33,11 @@ final class RemoteMediaIbexaRuntimeTest extends TestCase
         $this->remoteMediaProviderMock = $this->createMock(ProviderInterface::class);
         $this->securityMock = $this->createMock(AuthorizationCheckerInterface::class);
 
-        $this->runtime = new RemoteMediaIbexaRuntime($this->remoteMediaProviderMock, $this->securityMock);
+        $this->runtime = new RemoteMediaIbexaRuntime(
+            $this->remoteMediaProviderMock,
+            $this->securityMock,
+            '@NetgenRemoteMedia/app/view_resource.html.twig',
+        );
     }
 
     public function testGetIbexaAdminPreviewHtmlTag(): void
@@ -82,6 +87,12 @@ final class RemoteMediaIbexaRuntimeTest extends TestCase
         );
 
         $authenticatedLocation = new RemoteResourceLocation($authenticatedResource);
+
+        $this->securityMock
+            ->expects(self::once())
+            ->method('isGranted')
+            ->with(new Attribute('ngrm', 'read_protected'))
+            ->willReturn(false);
 
         $this->remoteMediaProviderMock
             ->expects(self::once())

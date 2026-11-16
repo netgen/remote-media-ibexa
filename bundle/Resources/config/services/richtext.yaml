@@ -1,9 +1,19 @@
 services:
-    Netgen\RemoteMediaIbexa\RichText\ConfigurationProvider:
+    Netgen\RemoteMediaIbexa\RichText\EditorConfiguration:
         arguments:
             - '@ibexa.config.resolver'
             - '@netgen_remote_media.controller.configuration'
             - '@router'
             - '@security.helper'
         tags:
-            - { name: ibexa.field_type.richtext.configuration.provider }
+            - { name: twig.runtime }
+
+    # An admin UI component instead of a RichText configuration provider: providers are resolved through a Twig global
+    # on every Twig rendering on every siteaccess, the component only when the admin UI layout is rendered
+    netgen.remote_media_ibexa.admin.component.richtext_editor_configuration:
+        parent: Ibexa\AdminUi\Component\TwigComponent
+        arguments:
+            - "@twig"
+            - "@@ibexadesign/ngremotemedia/richtext/editor_configuration.html.twig"
+        tags:
+            - { name: ibexa.admin_ui.component, group: 'script-head' }

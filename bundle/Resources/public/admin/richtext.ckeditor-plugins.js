@@ -1,10 +1,14 @@
-// Plugin and constants are imported directly: the plugin index also runs front-end rendering of stored elements
+// Plugin modules are imported directly: the plugin index also runs front-end rendering of stored elements
 import NetgenRemoteMediaPlugin from '@netgen-remote-media/bundle/Resources/public/js/ckeditor-plugin/plugin';
 import { pluginKey } from '@netgen-remote-media/bundle/Resources/public/js/ckeditor-plugin/constants';
+import {
+  hasPendingLocationRequests,
+  waitForLocationRequests,
+} from '@netgen-remote-media/bundle/Resources/public/js/ckeditor-plugin/utils/location-requests';
 import ibexaCustomTagFormat from './ckeditor/ibexa-custom-tag-format';
 
-(function (ibexa) {
-  // Provided by Netgen\RemoteMediaIbexa\RichText\ConfigurationProvider
+(function (doc, ibexa) {
+  // Provided by Netgen\Bundle\RemoteMediaIbexaBundle\Component\RichTextConfigurationComponent
   const { config, source, endpoints, locationIdPlaceholder } = ibexa.richText.ngremotemedia;
   const withLocationId = path => locationId => path.replace(locationIdPlaceholder, locationId);
 
@@ -20,10 +24,13 @@ import ibexaCustomTagFormat from './ckeditor/ibexa-custom-tag-format';
         config,
         source,
         format: ibexaCustomTagFormat,
+        // Every version, translation and copy of the content references the same locations as the version it was
+        // created from, so the editor works on copies and changes made in a draft never reach other versions
+        copyLocationsOnLoad: true,
+        onError: message => ibexa.helpers.notification.showErrorNotification(message),
         endpoints: {
           createLocation: endpoints.createLocation,
           updateLocation: withLocationId(endpoints.updateLocation),
-          deleteLocation: withLocationId(endpoints.deleteLocation),
           getSelectedImage: withLocationId(endpoints.getSelectedImage),
           viewResource: withLocationId(endpoints.viewResource),
         },
@@ -31,4 +38,34 @@ import ibexaCustomTagFormat from './ckeditor/ibexa-custom-tag-format';
     },
     true,
   );
-})(window.ibexa);
+
+  // An element is stored only with its location, so the form is submitted once the pending location requests
+  // (e.g. creating the location of a just selected resource) have settled
+  const waitingForms = new WeakSet();
+  doc.addEventListener(
+    'submit',
+    (event) => {
+      const form = event.target;
+      if (waitingForms.has(form)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        return;
+      }
+
+      if (!hasPendingLocationRequests()) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      waitingForms.add(form);
+
+      waitForLocationRequests().then(() => {
+        waitingForms.delete(form);
+        form.requestSubmit(event.submitter);
+      });
+    },
+    true,
+  );
+})(document, window.ibexa);

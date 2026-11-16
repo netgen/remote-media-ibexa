@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Netgen\RemoteMediaIbexa\RichText;
 
 use Ibexa\Contracts\Core\SiteAccess\ConfigResolverInterface;
-use Ibexa\Contracts\FieldTypeRichText\Configuration\Provider;
+use Ibexa\Core\MVC\Symfony\Security\Authorization\Attribute;
 use Netgen\Bundle\RemoteMediaBundle\Controller\Configuration as ConfigurationController;
 use Netgen\RemoteMedia\API\Values\Folder;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,10 +17,9 @@ use function json_decode;
 use const JSON_THROW_ON_ERROR;
 
 /**
- * Exposes the remote media CKEditor 5 plugin configuration to the admin UI
- * as `ibexa.richText.ngremotemedia`.
+ * Builds the configuration of the remote media CKEditor 5 plugin in the RichText field.
  */
-final class ConfigurationProvider implements Provider
+final class EditorConfiguration
 {
     public const LOCATION_ID_PLACEHOLDER = '__LOCATION_ID__';
 
@@ -32,11 +31,6 @@ final class ConfigurationProvider implements Provider
         private readonly RouterInterface $router,
         private readonly Security $security,
     ) {}
-
-    public function getName(): string
-    {
-        return 'ngremotemedia';
-    }
 
     /**
      * @return array<string, mixed>
@@ -69,7 +63,6 @@ final class ConfigurationProvider implements Provider
             'endpoints' => [
                 'createLocation' => $this->router->generate('netgen_remote_media_ajax_location_create'),
                 'updateLocation' => $this->generateLocationPath('netgen_remote_media_ajax_location_update'),
-                'deleteLocation' => $this->generateLocationPath('netgen_remote_media_ajax_location_delete'),
                 'getSelectedImage' => $this->generateLocationPath('netgen_remote_media_ajax_location_selected_image'),
                 'viewResource' => $this->generateLocationPath('netgen_remote_media_ajax_resource_view'),
             ],
@@ -83,11 +76,11 @@ final class ConfigurationProvider implements Provider
     }
 
     /**
-     * Twig globals (and with them this provider) are also resolved outside of the firewall, e.g. in CLI.
+     * The admin UI can also be rendered without a token, e.g. on error pages outside of the firewall.
      */
     private function canUpload(): bool
     {
-        return $this->security->getToken() !== null && $this->security->isGranted('ibexa:ngrm:upload');
+        return $this->security->getToken() !== null && $this->security->isGranted(new Attribute('ngrm', 'upload'));
     }
 
     /**

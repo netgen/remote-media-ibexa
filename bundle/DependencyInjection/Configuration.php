@@ -35,11 +35,25 @@ final class Configuration extends SiteAccessConfiguration
         $richTextNode
             ->scalarNode('variation_group')
                 ->info('Variation group used for cropping in the editor and for rendering')
-                ->cannotBeEmpty();
+                ->cannotBeEmpty()
+                ->validate()
+                    ->ifTrue(static fn (mixed $value): bool => !is_string($value))
+                    ->thenInvalid('Expected a string, got %s');
 
-        $richTextNode
-            ->scalarNode('location_source')
-                ->info('Source stored on remote resource locations created from RichText');
+        $nullableStrings = [
+            'location_source' => 'Source stored on remote resource locations created from RichText',
+            'folder' => 'Folder path for browsing and uploading, null for no restriction',
+            'parent_folder' => 'Parent folder path for browsing and uploading, null for no restriction',
+        ];
+
+        foreach ($nullableStrings as $name => $info) {
+            $richTextNode
+                ->scalarNode($name)
+                    ->info($info)
+                    ->validate()
+                        ->ifTrue(static fn (mixed $value): bool => $value !== null && !is_string($value))
+                        ->thenInvalid('Expected a string or null, got %s');
+        }
 
         foreach (['allowed_types', 'allowed_visibilities', 'allowed_tags'] as $name) {
             $richTextNode
@@ -52,14 +66,6 @@ final class Configuration extends SiteAccessConfiguration
         $richTextNode
             ->booleanNode('disable_upload')
                 ->info('Upload is also disabled for users without the ngrm/upload policy');
-
-        $richTextNode
-            ->scalarNode('folder')
-                ->info('Folder path for browsing and uploading, null for no restriction');
-
-        $richTextNode
-            ->scalarNode('parent_folder')
-                ->info('Parent folder path for browsing and uploading, null for no restriction');
 
         $richTextNode
             ->variableNode('upload_context')

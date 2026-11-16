@@ -8,11 +8,3 @@ system:
             content_edit:
                 form_templates:
                     - { template: '@ibexadesign/ngremotemedia/field_edit.html.twig', priority: 100 }
-        fieldtypes:
-            ezrichtext:
-                toolbar:
-                    ngremotemedia_group:
-                        buttons:
-                            ngremotemedia:
-                                priority: 5
-

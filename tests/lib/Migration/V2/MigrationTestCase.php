@@ -14,6 +14,7 @@ use Doctrine\ORM\Tools\SchemaTool;
 use Netgen\RemoteMedia\API\Values\RemoteResource;
 use Netgen\RemoteMedia\API\Values\RemoteResourceLocation;
 use Netgen\RemoteMediaIbexa\API\Values\NgRemoteMediaContentLink;
+use PDO;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -45,6 +46,12 @@ abstract class MigrationTestCase extends TestCase
         );
 
         $this->connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+
+        // The Netgen Remote Media mapping sets the MySQL collation utf8mb4_bin on remote IDs, SQLite needs it defined
+        $pdo = $this->connection->getWrappedConnection();
+        self::assertInstanceOf(PDO::class, $pdo);
+        $pdo->sqliteCreateCollation('utf8mb4_bin', 'strcmp');
+
         $this->entityManager = new EntityManager($this->connection, $config);
 
         (new SchemaTool($this->entityManager))->createSchema(

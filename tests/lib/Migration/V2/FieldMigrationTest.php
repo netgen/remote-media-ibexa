@@ -14,6 +14,7 @@ use Netgen\RemoteMediaIbexa\FieldType\Type;
 use Netgen\RemoteMediaIbexa\Migration\V2\FieldMigration;
 use Netgen\RemoteMediaIbexa\Migration\V2\ResourceRegistry;
 use Netgen\RemoteMediaIbexa\Migration\V2\ValueMapper;
+use Netgen\RemoteMediaIbexa\Migration\V2\WrongRemoteException;
 use PHPUnit\Framework\Attributes\CoversClass;
 
 use function array_filter;
@@ -256,6 +257,48 @@ final class FieldMigrationTest extends MigrationTestCase
             ],
             $this->loadLocations(),
         );
+    }
+
+    public function testMigrateFieldsWarnsAboutInvalidJson(): void
+    {
+        $this->insertField(1, 1, 42, 10, 'ngremotemedia', '{"resourceId": "image"');
+        $this->insertField(2, 1, 42, 10, 'ngremotemedia', '');
+        $this->insertField(3, 1, 42, 10, 'ngremotemedia', 'null');
+
+        $report = $this->migration->migrateFields(10, static function (): void {});
+
+        self::assertSame(0, $report->migrated);
+        self::assertSame(2, $report->empty);
+        self::assertSame(['Field 1, version 1: not migrated, the value is not valid JSON: {"resourceId": "image"'], $report->warnings);
+    }
+
+    public function testMigrateFieldsStopsWhenRemoteHasNoneOfABatch(): void
+    {
+        // E.g. a wrong Cloudinary account: none of the resources exists there
+        for ($id = 1; $id <= 10; ++$id) {
+            $this->insertV2Field($id, 1, 'image' . $id, '', '');
+        }
+
+        try {
+            $this->migration->migrateFields(10, static function (): void {});
+            self::fail('The migration must stop');
+        } catch (WrongRemoteException $e) {
+            self::assertStringStartsWith('None of 10 requested resources exists on the remote', $e->getMessage());
+        }
+
+        self::assertSame([], $this->loadLocations());
+    }
+
+    public function testMigrateFieldsContinuesWhenSmallBatchIsMissingOnRemote(): void
+    {
+        for ($id = 1; $id <= 9; ++$id) {
+            $this->insertV2Field($id, 1, 'image' . $id, '', '');
+        }
+
+        $report = $this->migration->migrateFields(10, static function (): void {});
+
+        self::assertSame(9, $report->migrated);
+        self::assertCount(9, $report->warnings);
     }
 
     private function addRemoteResource(string $remoteId, ?string $altText, ?string $caption): void

@@ -28,4 +28,12 @@ final class Report
      * @var string[]
      */
     public array $warnings = [];
+
+    /**
+     * RichText tags left in the Netgen Remote Media 2 format, by content ID, with the field, version and reason.
+     * The editor doesn't know them and removes them on the first save, so they must be fixed before.
+     *
+     * @var array<int, string[]>
+     */
+    public array $leftTags = [];
 }

@@ -28,6 +28,7 @@ use function is_array;
 use function json_decode;
 use function json_encode;
 use function sprintf;
+use function trim;
 
 use const JSON_PRETTY_PRINT;
 use const JSON_THROW_ON_ERROR;
@@ -144,10 +145,25 @@ final class FieldMigration
                 continue;
             }
 
-            $value = json_decode((string) ($row['data_text'] ?? ''), true);
-            $remoteId = is_array($value) ? $this->valueMapper->toRemoteIdFromFieldValue($value) : null;
+            $data = trim((string) ($row['data_text'] ?? ''));
 
-            if (!is_array($value) || $remoteId === null) {
+            if ($data === '' || $data === 'null') {
+                ++$report->empty;
+
+                continue;
+            }
+
+            $value = json_decode($data, true);
+
+            if (!is_array($value)) {
+                $report->warnings[] = sprintf('Field %d, version %d: not migrated, the value is not valid JSON: %s', $row['id'], $row['version'], $data);
+
+                continue;
+            }
+
+            $remoteId = $this->valueMapper->toRemoteIdFromFieldValue($value);
+
+            if ($remoteId === null) {
                 ++$report->empty;
 
                 continue;

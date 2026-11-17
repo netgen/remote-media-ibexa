@@ -30,7 +30,7 @@ final class RichTextConverterTest extends TestCase
             '<para>Before</para><para>' . $this->createV2Tag('folder/image', 'aligned', 'middle', 'wide') . '</para><para>After</para>',
         );
 
-        self::assertSame(1, $this->converter->convert($document, static fn (): int => 42));
+        self::assertSame(1, $this->converter->convert($document, static fn (): int => 42)->converted);
         self::assertSame(
             '<para>Before</para>'
             . '<eztemplate name="ngremotemedia"><ezconfig>'
@@ -98,7 +98,7 @@ final class RichTextConverterTest extends TestCase
             $this->converter->convert(
                 $document,
                 static fn (RichTextTag $tag): int => $locationIds[$tag->getResourceId()],
-            ),
+            )->converted,
         );
 
         self::assertSame(
@@ -114,7 +114,10 @@ final class RichTextConverterTest extends TestCase
         $document = $this->createDocument('<para>' . $this->createV2Tag('missing') . '</para>');
         $content = $this->getContent($document);
 
-        self::assertSame(0, $this->converter->convert($document, static fn (): ?int => null));
+        $conversion = $this->converter->convert($document, static fn (): string => 'Resource "missing" doesn\'t exist on the remote');
+
+        self::assertSame(0, $conversion->converted);
+        self::assertSame(['Resource "missing" doesn\'t exist on the remote'], $conversion->left);
         self::assertSame($content, $this->getContent($document));
         self::assertCount(1, $this->converter->findTags($document));
     }
@@ -124,13 +127,68 @@ final class RichTextConverterTest extends TestCase
         $document = $this->createDocument('<title ezxhtml:level="2">' . $this->createV2Tag('image') . '</title>');
         $content = $this->getContent($document);
 
-        $converted = $this->converter->convert(
+        $conversion = $this->converter->convert(
             $document,
             static fn (): int => self::fail('A tag which can\'t be converted must not get a location'),
         );
 
-        self::assertSame(0, $converted);
+        self::assertSame(0, $conversion->converted);
+        self::assertSame(
+            ['Tag of resource "image" is not in a paragraph (e.g. in a title, or in a table cell without a paragraph)'],
+            $conversion->left,
+        );
         self::assertSame($content, $this->getContent($document));
+    }
+
+    public function testConvertLeavesTagWithoutResourceId(): void
+    {
+        $document = $this->createDocument('<para>' . $this->createV2Tag('') . '</para>');
+
+        $conversion = $this->converter->convert(
+            $document,
+            static fn (): int => self::fail('A tag without a resource must not get a location'),
+        );
+
+        self::assertSame(['Tag without a resource ID'], $conversion->left);
+    }
+
+    public function testConvertMovesTagsInListsAfterTheList(): void
+    {
+        $document = $this->createDocument(
+            '<para>Before</para>'
+            . '<itemizedlist>'
+            . '<listitem><para>First ' . $this->createV2Tag('first') . '</para></listitem>'
+            . '<listitem><para>' . $this->createV2Tag('second') . '</para>'
+            . '<orderedlist><listitem><para>Nested ' . $this->createV2Tag('third') . '</para></listitem></orderedlist></listitem>'
+            . '<listitem><para>' . $this->createV2Tag('fourth') . '</para></listitem>'
+            . '</itemizedlist>'
+            . '<para>After</para>',
+        );
+
+        $locationIds = ['first' => 1, 'second' => 2, 'third' => 3, 'fourth' => 4];
+
+        $conversion = $this->converter->convert(
+            $document,
+            static fn (RichTextTag $tag): int => $locationIds[$tag->getResourceId()],
+        );
+
+        self::assertSame(4, $conversion->converted);
+        // Ibexa renders only paragraphs of list items: tags follow the outermost list, in their order,
+        // and the paragraphs of the list items stay, even when they're left empty
+        self::assertSame(
+            '<para>Before</para>'
+            . '<itemizedlist>'
+            . '<listitem><para>First </para></listitem>'
+            . '<listitem><para/><orderedlist><listitem><para>Nested </para></listitem></orderedlist></listitem>'
+            . '<listitem><para/></listitem>'
+            . '</itemizedlist>'
+            . '<eztemplate name="ngremotemedia"><ezconfig><ezvalue key="locationId">1</ezvalue></ezconfig></eztemplate>'
+            . '<eztemplate name="ngremotemedia"><ezconfig><ezvalue key="locationId">2</ezvalue></ezconfig></eztemplate>'
+            . '<eztemplate name="ngremotemedia"><ezconfig><ezvalue key="locationId">3</ezvalue></ezconfig></eztemplate>'
+            . '<eztemplate name="ngremotemedia"><ezconfig><ezvalue key="locationId">4</ezvalue></ezconfig></eztemplate>'
+            . '<para>After</para>',
+            $this->getContent($document),
+        );
     }
 
     public function testFindTagsSkipsConvertedTags(): void
@@ -157,6 +215,21 @@ final class RichTextConverterTest extends TestCase
         self::assertSame('left', $tags[0]->getAlignment());
         self::assertSame('wide', $tags[0]->getCssClass());
         self::assertSame(['small' => ['x' => 1, 'y' => 2, 'w' => 3, 'h' => 4]], $tags[0]->getCoords());
+    }
+
+    public function testFindTagsReadsAlloyEditorAlignment(): void
+    {
+        // AlloyEditor stored the alignment only as an attribute of the tag, "align" values take precedence
+        $document = $this->createDocument(
+            '<eztemplate name="ngremotemedia" ezxhtml:align="right"><ezconfig><ezvalue key="resourceId">first</ezvalue></ezconfig></eztemplate>'
+            . '<eztemplate name="ngremotemedia" ezxhtml:align="right"><ezconfig><ezvalue key="resourceId">second</ezvalue>'
+            . '<ezvalue key="align">middle</ezvalue></ezconfig></eztemplate>',
+        );
+
+        $tags = $this->converter->findTags($document);
+
+        self::assertSame('right', $tags[0]->getAlignment());
+        self::assertSame('center', $tags[1]->getAlignment());
     }
 
     private function createV2Tag(

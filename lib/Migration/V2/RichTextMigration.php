@@ -15,7 +15,9 @@ use Ibexa\Contracts\FieldTypeRichText\RichText\ValidatorInterface;
 use Netgen\RemoteMedia\API\Values\RemoteResourceLocation;
 use Throwable;
 
+use function array_diff;
 use function array_key_last;
+use function array_keys;
 use function array_merge;
 use function array_search;
 use function count;
@@ -43,11 +45,20 @@ final class RichTextMigration
 
     /**
      * IDs of locations created during the run, by field ID, remote ID, crop settings and caption override, so
-     * versions of a field share the location of the same tag, as with RichText edited with Netgen Remote Media 3.
+     * versions of a field share the location of the same tag. The editor works on copies of the locations it
+     * loads, so a shared location is never changed by editing one of the versions.
      *
      * @var array<string, int>
      */
     private array $locationIds = [];
+
+    /**
+     * Reasons, by remote ID, why resources couldn't be stored from the remote during the run, so they aren't
+     * requested again.
+     *
+     * @var array<string, string>
+     */
+    private array $resourceFailures = [];
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
@@ -72,6 +83,7 @@ final class RichTextMigration
         $report = new Report();
         $this->resourceRegistry->load();
         $this->locationIds = [];
+        $this->resourceFailures = [];
 
         $lastId = 0;
         $lastVersion = 0;
@@ -126,25 +138,26 @@ final class RichTextMigration
                 }
             }
 
-            $fields[] = [$row, $document, $tags];
+            $fields[] = [$row, $document];
         }
 
-        foreach ($this->resourceRegistry->storeFromRemote($remoteIds) as $reason) {
-            $report->warnings[] = 'RichText: ' . $reason;
+        $remoteIds = array_diff($remoteIds, array_keys($this->resourceFailures));
+
+        foreach ($this->resourceRegistry->storeFromRemote($remoteIds) as $remoteId => $reason) {
+            $this->resourceFailures[$remoteId] = $reason;
         }
 
         $this->entityManager->clear();
 
-        foreach ($fields as [$row, $document, $tags]) {
-            $this->migrateField($row, $document, $tags, $report);
+        foreach ($fields as [$row, $document]) {
+            $this->migrateField($row, $document, $report);
         }
     }
 
     /**
      * @param array<string, mixed> $row
-     * @param \Netgen\RemoteMediaIbexa\Migration\V2\RichTextTag[] $tags
      */
-    private function migrateField(array $row, DOMDocument $document, array $tags, Report $report): void
+    private function migrateField(array $row, DOMDocument $document, Report $report): void
     {
         $connection = $this->getConnection();
         $errorsBefore = $this->validate($document);
@@ -153,25 +166,28 @@ final class RichTextMigration
         $connection->beginTransaction();
 
         try {
-            $converted = $this->converter->convert(
+            $conversion = $this->converter->convert(
                 $document,
-                function (RichTextTag $tag) use ($row, &$createdLocations): ?int {
+                function (RichTextTag $tag) use ($row, &$createdLocations): int|string {
                     return $this->resolveLocationId($tag, (int) $row['id'], $createdLocations);
                 },
             );
 
             $newErrors = $this->diffErrors($errorsBefore, $this->validate($document));
 
-            if ($converted === 0 || count($newErrors) > 0) {
+            if ($conversion->converted === 0 || count($newErrors) > 0) {
                 $connection->rollBack();
 
                 foreach ($createdLocations as $key) {
                     unset($this->locationIds[$key]);
                 }
 
-                $report->warnings[] = $converted === 0 ?
-                    sprintf('%s: no tag could be converted', $this->describe($row)) :
-                    sprintf('%s: not migrated, the result is invalid: %s', $this->describe($row), implode('; ', $newErrors));
+                if (count($newErrors) > 0) {
+                    $report->warnings[] = sprintf('%s: not migrated, the result is invalid: %s', $this->describe($row), implode('; ', $newErrors));
+                    $this->addLeftTags($report, $row, ['all tags, the converted field would be invalid (see the warnings)']);
+                } else {
+                    $this->addLeftTags($report, $row, $conversion->left);
+                }
 
                 return;
             }
@@ -193,32 +209,32 @@ final class RichTextMigration
 
         ++$report->migrated;
 
-        $leftTags = $this->converter->findTags($document);
+        $this->addLeftTags($report, $row, $conversion->left);
+    }
 
-        if (count($leftTags) > 0) {
-            $report->warnings[] = sprintf(
-                '%s: %d of %d tags left as they are (resource missing on the remote, or the tag is not in a paragraph)',
-                $this->describe($row),
-                count($leftTags),
-                count($tags),
-            );
+    /**
+     * @param array<string, mixed> $row
+     * @param string[] $reasons
+     */
+    private function addLeftTags(Report $report, array $row, array $reasons): void
+    {
+        foreach ($reasons as $reason) {
+            $report->leftTags[(int) $row['contentobject_id']][] = sprintf('field %d, version %d: %s', $row['id'], $row['version'], $reason);
         }
     }
 
     /**
      * @param string[] $createdLocations
+     *
+     * @return int|string the location ID, or the reason why the tag can't be converted
      */
-    private function resolveLocationId(RichTextTag $tag, int $fieldId, array &$createdLocations): ?int
+    private function resolveLocationId(RichTextTag $tag, int $fieldId, array &$createdLocations): int|string
     {
-        if ($tag->getResourceId() === '') {
-            return null;
-        }
-
         $remoteId = $this->getRemoteId($tag);
         $resource = $this->resourceRegistry->get($remoteId);
 
         if ($resource === null) {
-            return null;
+            return $this->resourceFailures[$remoteId] ?? sprintf('Resource "%s" doesn\'t exist on the remote', $remoteId);
         }
 
         $cropSettings = $this->valueMapper->toCropSettings($tag->getCoords());

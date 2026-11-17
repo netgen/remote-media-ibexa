@@ -31,6 +31,7 @@ final class RichTextTag
      */
     private function __construct(
         private readonly array $values,
+        private readonly string $alignAttribute,
     ) {}
 
     public static function fromElement(DOMElement $element): self
@@ -41,7 +42,8 @@ final class RichTextTag
             $values[$valueElement->getAttribute('key')] = trim($valueElement->textContent);
         }
 
-        return new self($values);
+        // AlloyEditor stored the alignment only as the "ezxhtml:align" attribute of the tag (from "data-ezalign")
+        return new self($values, trim($element->getAttributeNS(RichTextConverter::XHTML_NAMESPACE, 'align')));
     }
 
     public function getResourceId(): string
@@ -73,7 +75,7 @@ final class RichTextTag
 
     public function getAlignment(): ?string
     {
-        return self::ALIGNMENTS[$this->getValue('align') ?? ''] ?? null;
+        return self::ALIGNMENTS[$this->getValue('align') ?? $this->alignAttribute] ?? null;
     }
 
     public function getCssClass(): ?string

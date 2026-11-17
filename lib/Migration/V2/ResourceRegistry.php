@@ -29,9 +29,16 @@ final class ResourceRegistry
     private const REMOTE_BATCH_SIZE = 100;
 
     /**
-     * Length of the remote_id, url, name and original_filename columns of ngrm_remote_resource.
+     * A batch of at least this many requested resources which comes back completely empty means the remote is not
+     * the one Netgen Remote Media 2 used (e.g. a wrong Cloudinary account or keys), so the migration stops.
+     * Smaller batches can legitimately contain only resources deleted from the remote.
      */
-    private const MAX_LENGTH = 255;
+    private const MIN_CHECKED_BATCH_SIZE = 10;
+
+    /**
+     * Length of the name column of ngrm_remote_resource, the other string columns are long enough.
+     */
+    private const MAX_NAME_LENGTH = 255;
 
     /** @var array<string, int> */
     private array $ids = [];
@@ -108,25 +115,17 @@ final class ResourceRegistry
      */
     public function add(RemoteResource $resource): RemoteResource
     {
-        $values = [
-            'remote ID' => $resource->getRemoteId(),
-            'URL' => $resource->getUrl(),
-            'name' => (string) $resource->getName(),
-            'original filename' => (string) $resource->getOriginalFilename(),
-        ];
+        $name = (string) $resource->getName();
 
-        foreach ($values as $label => $value) {
-            if (mb_strlen($value) > self::MAX_LENGTH) {
-                throw new ResourceNotStorableException(
-                    sprintf(
-                        'Resource "%s" can\'t be stored: its %s is longer than %d characters (%s)',
-                        $resource->getRemoteId(),
-                        $label,
-                        self::MAX_LENGTH,
-                        $value,
-                    ),
-                );
-            }
+        if (mb_strlen($name) > self::MAX_NAME_LENGTH) {
+            throw new ResourceNotStorableException(
+                sprintf(
+                    'Resource "%s" can\'t be stored: its name is longer than %d characters (%s)',
+                    $resource->getRemoteId(),
+                    self::MAX_NAME_LENGTH,
+                    $name,
+                ),
+            );
         }
 
         $this->entityManager->persist($resource);
@@ -153,6 +152,8 @@ final class ResourceRegistry
      *
      * @param string[] $remoteIds
      *
+     * @throws \Netgen\RemoteMediaIbexa\Migration\V2\WrongRemoteException when a whole batch comes back empty
+     *
      * @return array<string, string> reasons, by remote ID, for resources which couldn't be stored
      */
     public function storeFromRemote(array $remoteIds): array
@@ -169,6 +170,16 @@ final class ResourceRegistry
 
         foreach (array_chunk($missing, self::REMOTE_BATCH_SIZE) as $chunk) {
             $result = $this->provider->search(Query::fromRemoteIds($chunk, count($chunk)));
+
+            if (count($chunk) >= self::MIN_CHECKED_BATCH_SIZE && count($result->getResources()) === 0) {
+                throw new WrongRemoteException(
+                    sprintf(
+                        'None of %d requested resources exists on the remote (e.g. "%s"), check the Cloudinary account and keys',
+                        count($chunk),
+                        $chunk[0],
+                    ),
+                );
+            }
 
             foreach ($result->getResources() as $resource) {
                 if ($this->get($resource->getRemoteId()) !== null) {

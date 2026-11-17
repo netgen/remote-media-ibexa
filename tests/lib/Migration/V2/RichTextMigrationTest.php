@@ -109,6 +109,38 @@ final class RichTextMigrationTest extends MigrationTestCase
         self::assertSame(['alt_text' => null, 'caption' => null], $this->loadResource('upload|image|remote'));
     }
 
+    public function testMigrateReportsTagsLeftInV2FormatPerContent(): void
+    {
+        $this->insertRichTextField(
+            1,
+            $this->createV2Tag('remote', '')
+            . $this->createV2Tag('missing', '')
+            . $this->createV2Tag('', '')
+            . '<title ezxhtml:level="2"><eztemplateinline name="ngremotemedia"><ezconfig>'
+            . '<ezvalue key="resourceId">remote</ezvalue></ezconfig></eztemplateinline></title>',
+        );
+        $this->insertRichTextField(2, $this->createV2Tag('missing', ''));
+
+        $report = $this->migration->migrate(10, static function (): void {});
+
+        // Version 2 has no tag which can be converted, it stays as it is
+        self::assertSame(1, $report->migrated);
+        self::assertCount(1, $this->loadTagLocations(1));
+        self::assertSame([], $this->loadTagLocations(2));
+
+        self::assertSame(
+            [
+                42 => [
+                    'field 5, version 1: Resource "upload|image|missing" doesn\'t exist on the remote',
+                    'field 5, version 1: Tag without a resource ID',
+                    'field 5, version 1: Tag of resource "remote" is not in a paragraph (e.g. in a title, or in a table cell without a paragraph)',
+                    'field 5, version 2: Resource "upload|image|missing" doesn\'t exist on the remote',
+                ],
+            ],
+            $report->leftTags,
+        );
+    }
+
     private function insertRichTextField(int $version, string $content): void
     {
         $this->insertField(

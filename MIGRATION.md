@@ -21,6 +21,9 @@ which render as invalid data.
 * The core upgrade is done: XmlText is converted to RichText, and `ibexa:migrate:richtext-namespaces` has been run.
 * Netgen Remote Media 3 is installed and configured, see [INSTALL.md](INSTALL.md). Cloudinary accounts created before
   June 2024 use the `fixed` folder mode, which must be configured (`netgen_remote_media.cloudinary.folder_mode`).
+  The Cloudinary account and keys must be the ones Netgen Remote Media 2 used: when none of a batch of at least 10
+  requested resources exists on Cloudinary, the migration stops (fields migrated until then are kept and skipped by
+  the next run).
 * The variations used by the content exist in the Netgen Remote Media 3 configuration. Variation names are kept:
   fields use the variation group named after the content type identifier, RichText uses the group configured in
   `netgen_remote_media_ibexa.system.<scope>.richtext.variation_group`.
@@ -29,14 +32,14 @@ which render as invalid data.
 
 1. Back up the database.
 
-2. Create the tables of Netgen Remote Media 3:
+2. Create the tables of Netgen Remote Media 3 with the Doctrine migrations of `netgen/remote-media-bundle`, which
+   also create the `ngrm_remote_media_content_link` table of this bundle (see [INSTALL.md](INSTALL.md#database)):
 
    ```
-   mysql <database> < vendor/netgen/remote-media-ibexa/bundle/Resources/sql/upgrade/v2-to-v3/mysql.sql
+   php bin/console doctrine:migrations:migrate --configuration=vendor/netgen/remote-media-bundle/migrations/doctrine.yaml
    ```
 
-   (`postgresql.sql` for PostgreSQL). Don't use `doctrine:schema:update`: the Ibexa tables aren't mapped
-   with Doctrine ORM, so it would drop them.
+   Don't use `doctrine:schema:update`: the Ibexa tables aren't mapped with Doctrine ORM, so it would drop them.
 
 3. Run the migration:
 
@@ -46,6 +49,10 @@ which render as invalid data.
 
    Fields and custom tags which are already migrated are skipped, so the command can run again, e.g. after an
    interruption. It clears the Ibexa cache pool at the end.
+
+   Check the RichText tags the command lists as left in the Netgen Remote Media 2 format, per content (see below),
+   and fix them before editors change the content: the editor doesn't know these tags and removes them, with
+   their resource ID, when the content is saved, so a later run can't migrate them anymore.
 
 4. Reindex the content:
 
@@ -79,6 +86,12 @@ which render as invalid data.
   one of the resource (the Cloudinary one) gets it as the override of its location, so nothing is lost and
   `netgen:remote_media:refresh` doesn't change it. Netgen Remote Media 2 never stored RichText captions on
   Cloudinary, so RichText captions mostly become overrides.
+* An empty alt text or caption of a field value is not an override, so the field shows the alt text or caption of
+  the resource on Cloudinary, which Netgen Remote Media 2 didn't show for it. A location can't keep an empty alt
+  text on purpose: set the alt text on Cloudinary, or an override in the field, where that matters.
+* The RichText template renders only the caption override of a tag's location as its caption, as Netgen Remote
+  Media 2 rendered only the tag's own caption, not the caption of the resource.
+* A field value which isn't valid JSON is listed in the output and not migrated.
 * A resource used in a field which can't be loaded from Cloudinary (e.g. it no longer exists there) is listed in
   the output and created from the first field value using it (ordered by field ID and version), with the alt text
   and caption of that field value, so the field is migrated anyway. The alt texts and captions of other field
@@ -87,16 +100,22 @@ which render as invalid data.
 * Each field version gets its own location, with the crops of the field value. The location source is
   `ibexa_content_<content type identifier>_<field identifier>`, as with fields edited in Netgen Remote Media 3.
 * In RichText, all versions of a field share one location per resource and crop, with the source configured in
-  `richtext.location_source`. Because of that, changing the crop or the alt text or caption override of such an
-  element in a new draft also changes it in the published and other versions. An inline tag replaces its
-  paragraph: the paragraph's content before and after it stays in a paragraph before and after the tag.
-  `variation` becomes `variationName`, `cssclass` becomes `cssClass`, `align` becomes `alignment` (`middle`
-  becomes `center`), and the caption becomes the caption override of the location (see above). Tags with the same
-  resource and crops but different captions get different locations.
+  `richtext.location_source`. The editor works on copies of the locations it loads (see
+  [RICHTEXT.md](RICHTEXT.md#remote-resource-locations)), so editing a draft never changes the shared location.
+  An inline tag replaces its paragraph: the paragraph's content before and after it stays in a paragraph before and
+  after the tag. A tag in a list is moved right after the list, in the order of the tags, because Ibexa renders only
+  the paragraphs of a list item and the editor removes everything else from it; the paragraph of the list item
+  stays. `variation` becomes `variationName`, `cssclass` becomes `cssClass`, `align` (or the `ezxhtml:align`
+  attribute AlloyEditor stored) becomes `alignment` (`middle` becomes `center`), and the caption becomes the
+  caption override of the location (see above). Tags with the same resource and crops but different captions get
+  different locations.
 * A converted RichText field is stored only if it doesn't add RichText validation errors.
-* Fields and tags which can't be migrated are listed in the output and left as they are, e.g. tags whose resource
-  no longer exists on Cloudinary, or resources whose URL, name or filename is longer than the 255 characters
-  Netgen Remote Media 3 can store.
+* Tags which can't be migrated are left in the Netgen Remote Media 2 format and listed per content, with the field,
+  version and reason: the resource doesn't exist on Cloudinary or can't be stored, the tag has no resource ID, the
+  tag isn't in a paragraph (e.g. in a title, or in a table cell without a paragraph), or the converted field would
+  be invalid. Fix them before the content is edited (e.g. upload the missing resource and run the migration again,
+  or replace the tag in the editor). Resources whose name is longer than the 255 characters Netgen Remote Media 3
+  can store are listed too, and the fields using them are not migrated.
 * The JSON of Netgen Remote Media 2 stays in `data_text` of migrated fields. Netgen Remote Media 3 doesn't read it,
   and new versions don't copy it.
 * Remote media in Netgen Layouts blocks and collections is migrated by `netgen/layouts-remote-media` 2, with its

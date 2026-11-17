@@ -2,7 +2,7 @@
 
 ## 1.1.0
 
-Remote media in the RichText field, see [RICHTEXT.md](RICHTEXT.md) and [UPGRADE](UPGRADE.md#upgrade-from-10-to-11).
+Remote media in the RichText field, see [RICHTEXT.md](RICHTEXT.md) and [UPGRADE](UPGRADE.md#upgrade-from-10-to-11), and the migration of Netgen Remote Media 2 data, see [MIGRATION.md](MIGRATION.md).
 
 ### BC breaks
 
@@ -16,10 +16,16 @@ Remote media in the RichText field, see [RICHTEXT.md](RICHTEXT.md) and [UPGRADE]
 * `Resources/encore/ibexa.richtext.config.manager.js` which adds the plugin to the `richtext` Encore build
 * the plugin configuration is exposed as `ibexa.richText.ngremotemedia` by an admin UI component (`script-head` group) rendering `@ibexadesign/ngremotemedia/richtext/editor_configuration.html.twig`
 * Twig functions `ngrm_ibexa_can_read_protected`, `ngrm_ibexa_view_resource_template` and `ngrm_ibexa_richtext_editor_configuration`
+* the RichText custom tag template renders the caption override of the location in a `<figure>` with a `<figcaption>`
+* `netgen:remote_media:ibexa:migrate_v2` command which migrates Netgen Remote Media 2 field values, field definitions and RichText custom tags, with per-usage alt texts and captions as location overrides, see [MIGRATION.md](MIGRATION.md)
+* alt text and caption override inputs in the admin field edit are styled like the other inputs
 
 ### Fixed
 
 * the `ngrm / upload` and `ngrm / read_protected` policies are checked with Ibexa authorization attributes, so they work without a voter for `ibexa:module:function` strings (e.g. from `lolautruche/ez-core-extra-bundle`)
+* alt text and caption overrides of a field's location are kept when the content is saved or copied to a new version (`Converter\Hash`)
+* the standard field template renders a field without a variation with `ngrm_remote_resource_location_html_tag`, so the alt text and caption overrides are used
+* search fields `alttext` and `caption` and the admin field view use the alt text and caption overrides of the location when they are set
 
 ## 1.0.0
 

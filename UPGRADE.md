@@ -20,6 +20,8 @@ Version 1.1 adds remote media to the RichText field, see [RICHTEXT.md](RICHTEXT.
     php bin/console doctrine:migrations:migrate --configuration=vendor/netgen/remote-media-bundle/migrations/doctrine.yaml
     ```
 
+* Netgen Remote Media 2 data which was left in the database when upgrading to 1.0 can now be migrated with the `netgen:remote_media:ibexa:migrate_v2` command, see [MIGRATION.md](MIGRATION.md).
+
 ### Assets
 
 * Clear the cache, so the Encore configuration of the bundle is picked up, and rebuild the `richtext` Encore build, which now contains the CKEditor plugin:
@@ -89,7 +91,7 @@ The core bundle changed too, see the `netgen/remote-media-bundle` [CHANGELOG](ht
     php bin/console doctrine:migrations:migrate --configuration=vendor/netgen/remote-media-bundle/migrations/doctrine.yaml
     ```
 
-* Data migration from the v2 data (`ngremotemedia_field_link`) to the new tables is not part of 1.0.0, v2 data is not migrated automatically.
+* Netgen Remote Media 2 data (field values and RichText custom tags) is migrated by the `netgen:remote_media:ibexa:migrate_v2` command of 1.1, see [MIGRATION.md](MIGRATION.md).
 
 ### Breaking changes
 

@@ -21,8 +21,8 @@ use Twig\Loader\FilesystemLoader;
 use Twig\RuntimeLoader\FactoryRuntimeLoader;
 
 use function json_decode;
+use function mb_substr_count;
 use function preg_match;
-use function substr_count;
 
 #[CoversNothing]
 final class EditorConfigurationTemplateTest extends TestCase
@@ -74,7 +74,7 @@ final class EditorConfigurationTemplateTest extends TestCase
         $html = $twig->render('@ibexadesign/ngremotemedia/richtext/editor_configuration.html.twig');
 
         // Configuration values can't close the script element
-        self::assertSame(1, substr_count($html, '</script>'));
+        self::assertSame(1, mb_substr_count($html, '</script>'));
         self::assertSame(1, preg_match('/window\.ibexa\.addConfig\(\'richText\.ngremotemedia\', (.+)\);\s*<\/script>/s', $html, $matches));
 
         $configuration = json_decode($matches[1], true);

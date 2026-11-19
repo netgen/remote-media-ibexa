@@ -1,0 +1,210 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Netgen\RemoteMediaIbexa\Tests\RichText;
+
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DriverManager;
+use Ibexa\Contracts\Core\FieldType\GatewayBasedStorage;
+use Ibexa\Contracts\Core\FieldType\StorageGatewayInterface;
+use Ibexa\Contracts\Core\Persistence\Content\VersionInfo;
+use Netgen\RemoteMedia\API\ProviderInterface;
+use Netgen\RemoteMedia\API\Values\RemoteResource;
+use Netgen\RemoteMedia\API\Values\RemoteResourceLocation;
+use Netgen\RemoteMediaIbexa\RichText\FieldStorage;
+use Netgen\RemoteMediaIbexa\RichText\LocationCleaner;
+use Netgen\RemoteMediaIbexa\RichText\LocationGateway;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+
+use function array_map;
+use function implode;
+use function sort;
+
+#[CoversClass(FieldStorage::class)]
+#[CoversClass(LocationCleaner::class)]
+#[CoversClass(LocationGateway::class)]
+final class LocationCleanerTest extends TestCase
+{
+    private Connection $connection;
+
+    private FieldStorage $fieldStorage;
+
+    /**
+     * @var \Ibexa\Contracts\Core\FieldType\GatewayBasedStorage<\Ibexa\Contracts\Core\FieldType\StorageGatewayInterface>&\PHPUnit\Framework\MockObject\MockObject
+     */
+    private GatewayBasedStorage&MockObject $innerStorage;
+
+    private LocationCleaner $locationCleaner;
+
+    /**
+     * @var int[]
+     */
+    private array $removedLocationIds = [];
+
+    protected function setUp(): void
+    {
+        $this->connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+        $this->connection->executeStatement(
+            'CREATE TABLE ezcontentobject_attribute (id INTEGER NOT NULL, version INTEGER NOT NULL, '
+            . 'data_type_string VARCHAR(50) NOT NULL, data_text TEXT, PRIMARY KEY (id, version))',
+        );
+        $this->connection->executeStatement(
+            'CREATE TABLE ngrm_remote_media_content_link (id INTEGER PRIMARY KEY, field_id INTEGER NOT NULL, '
+            . 'version INTEGER NOT NULL, remote_resource_location_id INTEGER NOT NULL)',
+        );
+
+        $provider = $this->createMock(ProviderInterface::class);
+        $provider
+            ->method('loadLocation')
+            ->willReturnCallback(
+                static fn (int $id): RemoteResourceLocation => new RemoteResourceLocation(
+                    new RemoteResource('folder/image', 'image', 'https://example.com/image.jpg', ''),
+                    id: $id,
+                ),
+            );
+        $provider
+            ->method('removeLocation')
+            ->willReturnCallback(
+                function (RemoteResourceLocation $location): void {
+                    $this->removedLocationIds[] = (int) $location->getId();
+                },
+            );
+
+        $this->locationCleaner = new LocationCleaner(new LocationGateway($this->connection), $provider);
+        $this->innerStorage = $this->getMockBuilder(GatewayBasedStorage::class)
+            ->setConstructorArgs([$this->createMock(StorageGatewayInterface::class)])
+            ->getMock();
+
+        $this->fieldStorage = new FieldStorage($this->innerStorage, $this->locationCleaner);
+    }
+
+    public function testDeletesLocationsOfDeletedVersionOnlyWhenNotReferenced(): void
+    {
+        // Published version 1, draft version 2 edited copies of 2 and added 3, content 2 is a copy of version 1
+        $this->insertRichTextField(10, 1, $this->richText(1, 2));
+        $this->insertRichTextField(10, 2, $this->richText(1, 4, 3));
+        $this->insertRichTextField(20, 1, $this->richText(1, 2));
+
+        $this->innerStorage
+            ->expects(self::once())
+            ->method('deleteFieldData')
+            ->with(self::isInstanceOf(VersionInfo::class), [10], []);
+
+        $this->deleteVersion([10], 2);
+        $this->locationCleaner->cleanUp();
+
+        self::assertSame([3, 4], $this->getRemovedLocationIds());
+    }
+
+    public function testDeletesLocationsSharedByAllDeletedVersions(): void
+    {
+        // A translation is deleted from every version, the fields are deleted only after all versions are collected
+        $this->insertRichTextField(10, 1, $this->richText(5));
+        $this->insertRichTextField(10, 2, $this->richText(5, 6));
+        $this->insertRichTextField(11, 2, $this->richText(7));
+
+        $this->fieldStorage->deleteFieldData(new VersionInfo(['versionNo' => 1]), [10], []);
+        $this->fieldStorage->deleteFieldData(new VersionInfo(['versionNo' => 2]), [10], []);
+        $this->connection->executeStatement('DELETE FROM ezcontentobject_attribute WHERE id = 10');
+
+        $this->locationCleaner->cleanUp();
+
+        self::assertSame([5, 6], $this->getRemovedLocationIds());
+    }
+
+    public function testKeepsLocationsReferencedByFieldTypeOrUnparsableRichText(): void
+    {
+        $this->insertRichTextField(10, 1, $this->richText(8, 9, 13));
+        $this->insertRichTextField(30, 1, '<section><eztemplate name="ngremotemedia"><ezvalue key="locationId">9</ezvalue>');
+        $this->insertRichTextField(40, 1, $this->richText(113));
+        $this->connection->insert(
+            'ngrm_remote_media_content_link',
+            ['field_id' => 50, 'version' => 1, 'remote_resource_location_id' => 8],
+        );
+
+        $this->deleteVersion([10], 1);
+        $this->locationCleaner->cleanUp();
+
+        self::assertSame([13], $this->getRemovedLocationIds());
+    }
+
+    public function testIgnoresOtherCustomTags(): void
+    {
+        $this->insertRichTextField(10, 1, $this->richText(14));
+        $this->insertRichTextField(
+            20,
+            1,
+            '<section xmlns="http://docbook.org/ns/docbook"><eztemplate name="ngremotemedia"/>'
+            . '<eztemplate name="other"><ezconfig><ezvalue key="locationId">14</ezvalue></ezconfig></eztemplate></section>',
+        );
+
+        $this->deleteVersion([10], 1);
+        $this->locationCleaner->cleanUp();
+
+        self::assertSame([14], $this->getRemovedLocationIds());
+    }
+
+    public function testCleanUpRunsOnce(): void
+    {
+        $this->insertRichTextField(10, 1, $this->richText(15));
+
+        $this->deleteVersion([10], 1);
+        $this->locationCleaner->cleanUp();
+        $this->locationCleaner->cleanUp();
+
+        self::assertSame([15], $this->getRemovedLocationIds());
+    }
+
+    /**
+     * Deletes the fields the way Ibexa legacy storage does: external storage first, then the field rows.
+     *
+     * @param int[] $fieldIds
+     */
+    private function deleteVersion(array $fieldIds, int $versionNo): void
+    {
+        $this->fieldStorage->deleteFieldData(new VersionInfo(['versionNo' => $versionNo]), $fieldIds, []);
+
+        $this->connection->executeStatement(
+            'DELETE FROM ezcontentobject_attribute WHERE id IN (?) AND version = ?',
+            [$fieldIds, $versionNo],
+            [Connection::PARAM_INT_ARRAY],
+        );
+    }
+
+    private function insertRichTextField(int $id, int $versionNo, string $xml): void
+    {
+        $this->connection->insert(
+            'ezcontentobject_attribute',
+            ['id' => $id, 'version' => $versionNo, 'data_type_string' => 'ezrichtext', 'data_text' => $xml],
+        );
+    }
+
+    private function richText(int ...$locationIds): string
+    {
+        $elements = array_map(
+            static fn (int $locationId): string => '<eztemplate name="ngremotemedia"><ezconfig>'
+                . '<ezvalue key="locationId">' . $locationId . '</ezvalue><ezvalue key="variationName">small</ezvalue>'
+                . '</ezconfig></eztemplate>',
+            $locationIds,
+        );
+
+        return '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
+            . '<section xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" '
+            . 'xmlns:ezxhtml="http://ibexa.co/xmlns/dxp/docbook/xhtml" xmlns:ezcustom="http://ibexa.co/xmlns/dxp/docbook/custom" '
+            . 'version="5.0-variant ezpublish-1.0"><para>Text</para>' . implode('', $elements) . '</section>' . "\n";
+    }
+
+    /**
+     * @return int[]
+     */
+    private function getRemovedLocationIds(): array
+    {
+        $removedLocationIds = $this->removedLocationIds;
+        sort($removedLocationIds);
+
+        return $removedLocationIds;
+    }
+}

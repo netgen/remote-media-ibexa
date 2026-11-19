@@ -6,7 +6,7 @@ Version 1.1 adds remote media to the RichText field, see [RICHTEXT.md](RICHTEXT.
 
 ### Upgrade `composer.json`
 
-* The package requires `netgen/remote-media-bundle` `^3.1.1` (the CKEditor 5 plugin) and `ibexa/fieldtype-richtext` `^4.4`:
+* The package requires `netgen/remote-media-bundle` `^3.2` (the CKEditor 5 plugin), `ibexa/fieldtype-richtext` `^4.4` and `symfony/polyfill-mbstring` `^1.31`:
 
     ```
     composer require netgen/remote-media-ibexa:^1.1

@@ -17,3 +17,27 @@ services:
             - "@@ibexadesign/ngremotemedia/richtext/editor_configuration.html.twig"
         tags:
             - { name: ibexa.admin_ui.component, group: 'script-head' }
+
+    Netgen\RemoteMediaIbexa\RichText\LocationGateway:
+        arguments:
+            - '@ibexa.persistence.connection'
+
+    Netgen\RemoteMediaIbexa\RichText\LocationCleaner:
+        arguments:
+            - '@Netgen\RemoteMediaIbexa\RichText\LocationGateway'
+            - '@netgen_remote_media.provider'
+            - '@logger'
+
+    # Collects the locations of deleted RichText fields, the storage is called for every deleted field
+    Netgen\RemoteMediaIbexa\RichText\FieldStorage:
+        decorates: Ibexa\FieldTypeRichText\FieldType\RichText\RichTextStorage
+        decoration_on_invalid: ignore
+        arguments:
+            - '@.inner'
+            - '@Netgen\RemoteMediaIbexa\RichText\LocationCleaner'
+
+    Netgen\Bundle\RemoteMediaIbexaBundle\EventListener\RichTextLocationCleanerListener:
+        arguments:
+            - '@Netgen\RemoteMediaIbexa\RichText\LocationCleaner'
+        tags:
+            - { name: kernel.event_subscriber }

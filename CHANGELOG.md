@@ -6,12 +6,14 @@ Remote media in the RichText field, see [RICHTEXT.md](RICHTEXT.md) and [UPGRADE]
 
 ### BC breaks
 
-* requires `netgen/remote-media-bundle` 3.1.1+ (CKEditor 5 plugin) and `ibexa/fieldtype-richtext` 4.4+
+* requires `netgen/remote-media-bundle` 3.2.0+ (CKEditor 5 plugin), `ibexa/fieldtype-richtext` 4.4+ and `symfony/polyfill-mbstring` 1.31+ (`mb_trim` on PHP < 8.4)
 
 ### Added
 
 * Netgen Remote Media button in the RichText (CKEditor 5) toolbar of the admin UI, selected resources are stored in the RichText XML as the `ngremotemedia` custom tag (`locationId`, `variationName`, `cssClass` and `alignment`) and rendered server side with `@ibexadesign/ngremotemedia/richtext/custom_tag.html.twig`
 * the editor works on copies of the stored remote resource locations, so changes made in a draft, translation or copy never change the locations of other versions or content
+* remote resource locations of deleted RichText fields (discarded drafts, deleted versions, translations, content and field definitions) are deleted at the end of the request or console command, when no other RichText field of any version or content and no Netgen Remote Media field references them, by `Netgen\RemoteMediaIbexa\RichText\FieldStorage`, which decorates the RichText external storage
+* the content edit form is autosaved again once pending location requests have settled, when the Ibexa autosave ran while a location was being created
 * siteaccess aware `netgen_remote_media_ibexa.system.<scope>.richtext` semantic configuration (`variation_group`, `location_source`, `allowed_types`, `allowed_visibilities`, `allowed_tags`, `disable_upload`, `folder`, `parent_folder` and `upload_context`)
 * `Resources/encore/ibexa.richtext.config.manager.js` which adds the plugin to the `richtext` Encore build
 * the plugin configuration is exposed as `ibexa.richText.ngremotemedia` by an admin UI component (`script-head` group) rendering `@ibexadesign/ngremotemedia/richtext/editor_configuration.html.twig`

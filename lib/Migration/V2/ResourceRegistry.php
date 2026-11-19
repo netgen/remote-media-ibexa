@@ -12,6 +12,7 @@ use Netgen\RemoteMedia\API\Values\RemoteResource;
 use function array_chunk;
 use function array_diff;
 use function array_keys;
+use function array_slice;
 use function array_unique;
 use function array_values;
 use function count;
@@ -29,9 +30,10 @@ final class ResourceRegistry
     private const REMOTE_BATCH_SIZE = 100;
 
     /**
-     * A batch of at least this many requested resources which comes back completely empty means the remote is not
-     * the one Netgen Remote Media 2 used (e.g. a wrong Cloudinary account or keys), so the migration stops.
-     * Smaller batches can legitimately contain only resources deleted from the remote.
+     * A batch of at least this many requested resources which comes back completely empty, while no resource has
+     * been found on the remote, means the remote is not the one Netgen Remote Media 2 used (e.g. a wrong Cloudinary
+     * account or keys), so the migration stops. Smaller batches, and batches once resources have been found on the
+     * remote, can legitimately contain only resources deleted from the remote.
      */
     private const MIN_CHECKED_BATCH_SIZE = 10;
 
@@ -51,6 +53,11 @@ final class ResourceRegistry
 
     /** @var array<string, \Netgen\RemoteMedia\API\Values\RemoteResource> */
     private array $added = [];
+
+    /**
+     * Whether a resource has been found on the remote, so the remote is the right one.
+     */
+    private bool $isRemoteConfirmed = false;
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
@@ -153,8 +160,10 @@ final class ResourceRegistry
      * @param string[] $remoteIds
      *
      * @throws \Netgen\RemoteMediaIbexa\Migration\V2\WrongRemoteException when a whole batch comes back empty
+     *                                                                     and the remote can't be confirmed
      *
-     * @return array<string, string> reasons, by remote ID, for resources which couldn't be stored
+     * @return array<string, \Netgen\RemoteMediaIbexa\Migration\V2\ResourceMissingOnRemoteException|\Netgen\RemoteMediaIbexa\Migration\V2\ResourceNotStorableException>
+     *         reasons, by remote ID, for resources which couldn't be stored
      */
     public function storeFromRemote(array $remoteIds): array
     {
@@ -169,9 +178,11 @@ final class ResourceRegistry
         $failed = [];
 
         foreach (array_chunk($missing, self::REMOTE_BATCH_SIZE) as $chunk) {
-            $result = $this->provider->search(Query::fromRemoteIds($chunk, count($chunk)));
+            $resources = $this->provider->search(Query::fromRemoteIds($chunk, count($chunk)))->getResources();
 
-            if (count($chunk) >= self::MIN_CHECKED_BATCH_SIZE && count($result->getResources()) === 0) {
+            if (count($resources) > 0) {
+                $this->isRemoteConfirmed = true;
+            } elseif (count($chunk) >= self::MIN_CHECKED_BATCH_SIZE && !$this->confirmRemote()) {
                 throw new WrongRemoteException(
                     sprintf(
                         'None of %d requested resources exists on the remote (e.g. "%s"), check the Cloudinary account and keys',
@@ -181,7 +192,7 @@ final class ResourceRegistry
                 );
             }
 
-            foreach ($result->getResources() as $resource) {
+            foreach ($resources as $resource) {
                 if ($this->get($resource->getRemoteId()) !== null) {
                     continue;
                 }
@@ -189,7 +200,7 @@ final class ResourceRegistry
                 try {
                     $this->add($resource);
                 } catch (ResourceNotStorableException $e) {
-                    $failed[$resource->getRemoteId()] = $e->getMessage();
+                    $failed[$resource->getRemoteId()] = $e;
                 }
             }
         }
@@ -198,10 +209,34 @@ final class ResourceRegistry
         $this->commit();
 
         foreach (array_diff($missing, array_keys($this->ids), array_keys($failed)) as $remoteId) {
-            $failed[$remoteId] = sprintf('Resource "%s" doesn\'t exist on the remote', $remoteId);
+            $failed[$remoteId] = new ResourceMissingOnRemoteException(
+                sprintf('Resource "%s" doesn\'t exist on the remote', $remoteId),
+            );
         }
 
         return $failed;
+    }
+
+    /**
+     * Checks whether stored resources (e.g. from a previous run) exist on the remote, when no resource has been
+     * found on the remote during this run yet.
+     */
+    private function confirmRemote(): bool
+    {
+        if ($this->isRemoteConfirmed) {
+            return true;
+        }
+
+        $storedRemoteIds = array_slice(array_keys($this->ids), 0, self::MIN_CHECKED_BATCH_SIZE);
+
+        if (count($storedRemoteIds) === 0) {
+            return false;
+        }
+
+        $result = $this->provider->search(Query::fromRemoteIds($storedRemoteIds, count($storedRemoteIds)));
+        $this->isRemoteConfirmed = count($result->getResources()) > 0;
+
+        return $this->isRemoteConfirmed;
     }
 
     private function remember(string $remoteId, int $id, ?string $altText, ?string $caption): void

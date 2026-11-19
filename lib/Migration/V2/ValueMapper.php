@@ -12,7 +12,7 @@ use function is_array;
 use function is_numeric;
 use function is_scalar;
 use function is_string;
-use function trim;
+use function mb_trim;
 
 /**
  * Maps Netgen Remote Media 2 data to its Netgen Remote Media 3 counterparts.
@@ -96,7 +96,7 @@ final class ValueMapper
      */
     public function toOverride(?string $value, ?string $resourceValue): ?string
     {
-        if ($value === null || trim($value) === '' || $value === $resourceValue) {
+        if ($value === null || mb_trim($value) === '' || $value === $resourceValue) {
             return null;
         }
 

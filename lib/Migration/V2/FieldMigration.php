@@ -27,8 +27,8 @@ use function count;
 use function is_array;
 use function json_decode;
 use function json_encode;
+use function mb_trim;
 use function sprintf;
-use function trim;
 
 use const JSON_PRETTY_PRINT;
 use const JSON_THROW_ON_ERROR;
@@ -38,8 +38,9 @@ use const JSON_THROW_ON_ERROR;
  * remote resource locations and content links of Netgen Remote Media 3.
  *
  * Resources which aren't stored yet are loaded from the remote, so the alt text and caption of field values are
- * compared with the ones on the remote. A resource which can't be loaded from the remote is created from the first
- * field value using it, so the field is migrated anyway.
+ * compared with the ones on the remote. A resource which doesn't exist on the remote is created from the first
+ * field value using it, so the field is migrated anyway. Fields of a resource which exists on the remote but can't
+ * be stored are not migrated.
  *
  * Archived versions are not migrated: their fields are empty with Netgen Remote Media 3.
  */
@@ -58,6 +59,13 @@ final class FieldMigration
      * @var array<string, true>
      */
     private array $requestedRemoteIds = [];
+
+    /**
+     * Reasons, by remote ID, for resources which exist on the remote but can't be stored.
+     *
+     * @var array<string, string>
+     */
+    private array $notStorableReasons = [];
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
@@ -108,6 +116,7 @@ final class FieldMigration
         $report = new Report();
         $this->resourceRegistry->load();
         $this->requestedRemoteIds = [];
+        $this->notStorableReasons = [];
 
         $lastId = 0;
         $lastVersion = 0;
@@ -145,7 +154,7 @@ final class FieldMigration
                 continue;
             }
 
-            $data = trim((string) ($row['data_text'] ?? ''));
+            $data = mb_trim((string) ($row['data_text'] ?? ''));
 
             if ($data === '' || $data === 'null') {
                 ++$report->empty;
@@ -179,6 +188,17 @@ final class FieldMigration
 
         try {
             foreach ($fields as [$row, $value, $remoteId]) {
+                if (isset($this->notStorableReasons[$remoteId])) {
+                    $report->warnings[] = sprintf(
+                        'Field %d, version %d: not migrated, %s',
+                        $row['id'],
+                        $row['version'],
+                        $this->notStorableReasons[$remoteId],
+                    );
+
+                    continue;
+                }
+
                 $data = $this->valueMapper->toCloudinaryData($value);
                 $resource = $this->resourceRegistry->get($remoteId) ?? $this->createResource($data, $row, $report);
 
@@ -220,7 +240,7 @@ final class FieldMigration
 
     /**
      * Stores resources which aren't stored yet from the remote. Every remote ID is requested at most once per run:
-     * resources which can't be stored from the remote are created from field values.
+     * resources which don't exist on the remote are created from field values.
      *
      * @param string[] $remoteIds
      */
@@ -232,8 +252,15 @@ final class FieldMigration
             $this->requestedRemoteIds[$remoteId] = true;
         }
 
-        foreach ($this->resourceRegistry->storeFromRemote($remoteIds) as $reason) {
-            $report->warnings[] = sprintf('Fields: %s, creating the resource from a field value instead', $reason);
+        foreach ($this->resourceRegistry->storeFromRemote($remoteIds) as $remoteId => $reason) {
+            if ($reason instanceof ResourceNotStorableException) {
+                // Reported for every field of the resource
+                $this->notStorableReasons[$remoteId] = $reason->getMessage();
+
+                continue;
+            }
+
+            $report->warnings[] = sprintf('Fields: %s, creating the resource from a field value instead', $reason->getMessage());
         }
 
         $this->entityManager->clear();

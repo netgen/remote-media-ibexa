@@ -152,6 +152,21 @@ final class RichTextConverterTest extends TestCase
         self::assertSame(['Tag without a resource ID'], $conversion->left);
     }
 
+    public function testConvertLeavesTagWithoutResourceIdValue(): void
+    {
+        $document = $this->createDocument(
+            '<eztemplate name="ngremotemedia"><ezconfig><ezvalue key="variation">small</ezvalue></ezconfig></eztemplate>',
+        );
+
+        $conversion = $this->converter->convert(
+            $document,
+            static fn (): int => self::fail('A tag without a resource must not get a location'),
+        );
+
+        self::assertSame(['Tag without a resource ID'], $conversion->left);
+        self::assertCount(1, $this->converter->findTags($document));
+    }
+
     public function testConvertMovesTagsInListsAfterTheList(): void
     {
         $document = $this->createDocument(
@@ -173,20 +188,72 @@ final class RichTextConverterTest extends TestCase
         );
 
         self::assertSame(4, $conversion->converted);
-        // Ibexa renders only paragraphs of list items: tags follow the outermost list, in their order,
-        // and the paragraphs of the list items stay, even when they're left empty
+        // Ibexa renders only paragraphs of list items: tags follow the outermost list, in their order, the
+        // paragraphs of list items with other content stay, even when they're left empty, and list items left
+        // without content are removed
         self::assertSame(
             '<para>Before</para>'
             . '<itemizedlist>'
             . '<listitem><para>First </para></listitem>'
             . '<listitem><para/><orderedlist><listitem><para>Nested </para></listitem></orderedlist></listitem>'
-            . '<listitem><para/></listitem>'
             . '</itemizedlist>'
             . '<eztemplate name="ngremotemedia"><ezconfig><ezvalue key="locationId">1</ezvalue></ezconfig></eztemplate>'
             . '<eztemplate name="ngremotemedia"><ezconfig><ezvalue key="locationId">2</ezvalue></ezconfig></eztemplate>'
             . '<eztemplate name="ngremotemedia"><ezconfig><ezvalue key="locationId">3</ezvalue></ezconfig></eztemplate>'
             . '<eztemplate name="ngremotemedia"><ezconfig><ezvalue key="locationId">4</ezvalue></ezconfig></eztemplate>'
             . '<para>After</para>',
+            $this->getContent($document),
+        );
+    }
+
+    public function testConvertRemovesListLeftWithoutContent(): void
+    {
+        $document = $this->createDocument(
+            '<itemizedlist><listitem><para>' . $this->createV2Tag('first') . '</para>'
+            . '<itemizedlist><listitem><para> ' . $this->createV2Tag('second') . '</para></listitem></itemizedlist>'
+            . '</listitem></itemizedlist>',
+        );
+
+        $this->converter->convert($document, static fn (RichTextTag $tag): int => $tag->getResourceId() === 'first' ? 1 : 2);
+
+        self::assertSame(
+            '<eztemplate name="ngremotemedia"><ezconfig><ezvalue key="locationId">1</ezvalue></ezconfig></eztemplate>'
+            . '<eztemplate name="ngremotemedia"><ezconfig><ezvalue key="locationId">2</ezvalue></ezconfig></eztemplate>',
+            $this->getContent($document),
+        );
+    }
+
+    public function testConvertKeepsOrderOfTagsInListAcrossRuns(): void
+    {
+        $document = $this->createDocument(
+            '<itemizedlist>'
+            . '<listitem><para>A ' . $this->createV2Tag('a') . '</para></listitem>'
+            . '<listitem><para>B ' . $this->createV2Tag('b') . '</para></listitem>'
+            . '<listitem><para>C ' . $this->createV2Tag('c') . '</para></listitem>'
+            . '</itemizedlist>',
+        );
+
+        $locationIds = ['a' => 1, 'b' => 'Resource "b" doesn\'t exist on the remote', 'c' => 3];
+
+        $conversion = $this->converter->convert($document, static fn (RichTextTag $tag): int|string => $locationIds[$tag->getResourceId()]);
+
+        self::assertSame(2, $conversion->converted);
+        self::assertSame(['Resource "b" doesn\'t exist on the remote'], $conversion->left);
+
+        // The resource is fixed for the next run
+        $locationIds['b'] = 2;
+        $conversion = $this->converter->convert($document, static fn (RichTextTag $tag): int => $locationIds[$tag->getResourceId()]);
+
+        self::assertSame(1, $conversion->converted);
+        self::assertSame(
+            '<itemizedlist>'
+            . '<listitem><para>A </para></listitem>'
+            . '<listitem><para>B </para></listitem>'
+            . '<listitem><para>C </para></listitem>'
+            . '</itemizedlist>'
+            . '<eztemplate name="ngremotemedia"><ezconfig><ezvalue key="locationId">1</ezvalue></ezconfig></eztemplate>'
+            . '<eztemplate name="ngremotemedia"><ezconfig><ezvalue key="locationId">2</ezvalue></ezconfig></eztemplate>'
+            . '<eztemplate name="ngremotemedia"><ezconfig><ezvalue key="locationId">3</ezvalue></ezconfig></eztemplate>',
             $this->getContent($document),
         );
     }

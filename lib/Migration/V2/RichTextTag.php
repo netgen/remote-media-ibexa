@@ -9,7 +9,7 @@ use DOMElement;
 use function in_array;
 use function is_array;
 use function json_decode;
-use function trim;
+use function mb_trim;
 
 /**
  * Values of a Netgen Remote Media 2 "ngremotemedia" RichText custom tag.
@@ -39,11 +39,11 @@ final class RichTextTag
         $values = [];
 
         foreach ($element->getElementsByTagNameNS(RichTextConverter::DOCBOOK_NAMESPACE, 'ezvalue') as $valueElement) {
-            $values[$valueElement->getAttribute('key')] = trim($valueElement->textContent);
+            $values[$valueElement->getAttribute('key')] = mb_trim($valueElement->textContent);
         }
 
         // AlloyEditor stored the alignment only as the "ezxhtml:align" attribute of the tag (from "data-ezalign")
-        return new self($values, trim($element->getAttributeNS(RichTextConverter::XHTML_NAMESPACE, 'align')));
+        return new self($values, mb_trim($element->getAttributeNS(RichTextConverter::XHTML_NAMESPACE, 'align')));
     }
 
     public function getResourceId(): string

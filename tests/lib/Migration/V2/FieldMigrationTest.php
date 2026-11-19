@@ -22,6 +22,7 @@ use function array_values;
 use function count;
 use function in_array;
 use function json_encode;
+use function str_repeat;
 
 use const JSON_THROW_ON_ERROR;
 
@@ -301,14 +302,78 @@ final class FieldMigrationTest extends MigrationTestCase
         self::assertCount(9, $report->warnings);
     }
 
-    private function addRemoteResource(string $remoteId, ?string $altText, ?string $caption): void
+    public function testMigrateFieldsContinuesWhenBatchIsMissingAfterResourceWasFound(): void
+    {
+        $this->addRemoteResource('upload|image|found', null, null);
+        $this->insertV2Field(1, 1, 'found', '', '');
+
+        // Deleted from the remote: a whole batch is missing once the remote has been confirmed
+        for ($id = 2; $id <= 20; ++$id) {
+            $this->insertV2Field($id, 1, 'image' . $id, '', '');
+        }
+
+        $report = $this->migration->migrateFields(10, static function (): void {});
+
+        self::assertSame(20, $report->migrated);
+        self::assertCount(19, $report->warnings);
+    }
+
+    public function testMigrateFieldsContinuesWhenStoredResourceExistsOnRemote(): void
+    {
+        // E.g. a rerun: the found resources are stored, only resources deleted from the remote are requested
+        $this->insertResource('upload|image|stored', null, null);
+        $this->addRemoteResource('upload|image|stored', null, null);
+
+        for ($id = 1; $id <= 10; ++$id) {
+            $this->insertV2Field($id, 1, 'image' . $id, '', '');
+        }
+
+        $report = $this->migration->migrateFields(10, static function (): void {});
+
+        self::assertSame(10, $report->migrated);
+        self::assertCount(10, $report->warnings);
+        self::assertSame(['upload|image|stored'], $this->requests[1]);
+    }
+
+    public function testMigrateFieldsStopsWhenStoredResourcesAreMissingOnRemote(): void
+    {
+        $this->insertResource('upload|image|stored', null, null);
+
+        for ($id = 1; $id <= 10; ++$id) {
+            $this->insertV2Field($id, 1, 'image' . $id, '', '');
+        }
+
+        $this->expectException(WrongRemoteException::class);
+
+        $this->migration->migrateFields(10, static function (): void {});
+    }
+
+    public function testMigrateFieldsDoesNotCreateResourceWhichCantBeStoredFromFieldValue(): void
+    {
+        $this->addRemoteResource('upload|image|long', null, null, str_repeat('a', 256));
+        $this->insertV2Field(1, 1, 'long', '', '');
+        $this->insertV2Field(1, 2, 'long', '', '');
+
+        $report = $this->migration->migrateFields(10, static function (): void {});
+
+        self::assertSame(0, $report->migrated);
+        self::assertSame(
+            [
+                'Field 1, version 1: not migrated, Resource "upload|image|long" can\'t be stored: its name is longer than 255 characters (' . str_repeat('a', 256) . ')',
+                'Field 1, version 2: not migrated, Resource "upload|image|long" can\'t be stored: its name is longer than 255 characters (' . str_repeat('a', 256) . ')',
+            ],
+            $report->warnings,
+        );
+    }
+
+    private function addRemoteResource(string $remoteId, ?string $altText, ?string $caption, ?string $name = null): void
     {
         $this->remoteResources[$remoteId] = new RemoteResource(
             remoteId: $remoteId,
             type: RemoteResource::TYPE_IMAGE,
             url: 'https://res.cloudinary.com/demo/image/upload/' . $remoteId,
             md5: 'etag',
-            name: $remoteId,
+            name: $name ?? $remoteId,
             originalFilename: $remoteId,
             altText: $altText,
             caption: $caption,

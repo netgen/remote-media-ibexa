@@ -144,7 +144,7 @@ final class RichTextMigration
         $remoteIds = array_diff($remoteIds, array_keys($this->resourceFailures));
 
         foreach ($this->resourceRegistry->storeFromRemote($remoteIds) as $remoteId => $reason) {
-            $this->resourceFailures[$remoteId] = $reason;
+            $this->resourceFailures[$remoteId] = $reason->getMessage();
         }
 
         $this->entityManager->clear();

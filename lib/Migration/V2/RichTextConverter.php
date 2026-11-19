@@ -15,8 +15,8 @@ use SplObjectStorage;
 use function in_array;
 use function is_string;
 use function iterator_to_array;
+use function mb_trim;
 use function sprintf;
-use function trim;
 
 /**
  * Converts the "ngremotemedia" custom tags of Netgen Remote Media 2 in RichText DocBook to the
@@ -28,7 +28,9 @@ use function trim;
  * in two paragraphs around it.
  *
  * A list item can contain only paragraphs (Ibexa renders nothing else of it, and the editor removes the rest),
- * so tags in a list are moved right after the list, in their order, and the rest of the list item is kept.
+ * so tags in a list are moved right after the list, in their order, and the rest of the list item is kept. List
+ * items (and lists) left without content are removed. Tags in a list which can't be converted are moved too, so
+ * a later run converts them in place, in their order.
  */
 final class RichTextConverter
 {
@@ -63,8 +65,9 @@ final class RichTextConverter
 
     /**
      * Converts every tag for which $resolveLocationId returns a remote resource location ID. Tags for which it
-     * returns a reason (a string), tags without a resource ID and inline tags outside of a paragraph are left as
-     * they are, with the reason in the result.
+     * returns a reason (a string), tags without a resource ID and inline tags outside of a paragraph are left in
+     * the Netgen Remote Media 2 format, with the reason in the result. Of those, tags with a reason are still moved
+     * out of lists, in their order.
      *
      * @param callable(\Netgen\RemoteMediaIbexa\Migration\V2\RichTextTag): (int|string) $resolveLocationId
      */
@@ -96,18 +99,22 @@ final class RichTextConverter
             }
 
             $locationId = $resolveLocationId($tag);
+            $list = $this->findOutermostList($element);
 
             if (is_string($locationId)) {
                 $conversion->left[] = $locationId;
+
+                if ($list instanceof DOMElement) {
+                    $this->moveAfterList($document, $list, $element, null, $lastMovedTags);
+                }
 
                 continue;
             }
 
             $replacement = $this->createElement($document, $locationId, $tag);
-            $list = $this->findOutermostList($element);
 
             if ($list instanceof DOMElement) {
-                $this->moveAfterList($list, $element, $replacement, $lastMovedTags);
+                $this->moveAfterList($document, $list, $element, $replacement, $lastMovedTags);
             } elseif ($paragraph instanceof DOMElement) {
                 $this->replaceParagraph($paragraph, $element, $replacement);
             } else {
@@ -121,7 +128,7 @@ final class RichTextConverter
     }
 
     /**
-     * Netgen Remote Media 2 tags: Netgen Remote Media 3 tags have a location ID instead of a resource ID.
+     * Netgen Remote Media 2 tags, with or without a resource ID: Netgen Remote Media 3 tags have a location ID.
      *
      * @return \DOMElement[]
      */
@@ -130,7 +137,7 @@ final class RichTextConverter
         $xpath = new DOMXPath($document);
         $xpath->registerNamespace('docbook', self::DOCBOOK_NAMESPACE);
 
-        $condition = '[@name="' . self::TAG_NAME . '"][docbook:ezconfig/docbook:ezvalue[@key="resourceId"]]';
+        $condition = '[@name="' . self::TAG_NAME . '"][not(docbook:ezconfig/docbook:ezvalue[@key="locationId"])]';
         $nodes = $xpath->query('//docbook:eztemplateinline' . $condition . ' | //docbook:eztemplate' . $condition);
 
         $elements = [];
@@ -171,17 +178,61 @@ final class RichTextConverter
 
     /**
      * Removes $element from the list and inserts $replacement after the list, after the tags moved before it.
-     * The paragraph of the list item stays, even when it's empty: Ibexa renders a list item from its paragraphs.
+     * Without $replacement, $element itself is moved, an inline tag in its own paragraph. The paragraph of the list
+     * item stays when the list item has other content: Ibexa renders a list item from its paragraphs.
      *
      * @param \SplObjectStorage<\DOMElement, \DOMElement> $lastMovedTags
      */
-    private function moveAfterList(DOMElement $list, DOMElement $element, DOMElement $replacement, SplObjectStorage $lastMovedTags): void
-    {
-        $previous = $lastMovedTags->contains($list) ? $lastMovedTags[$list] : $list;
+    private function moveAfterList(
+        DOMDocument $document,
+        DOMElement $list,
+        DOMElement $element,
+        ?DOMElement $replacement,
+        SplObjectStorage $lastMovedTags,
+    ): void {
+        $listItem = $this->findAncestor($element, ['listitem']);
+        $element->parentNode?->removeChild($element);
+
+        if ($replacement === null) {
+            $replacement = $element;
+
+            if ($element->localName === 'eztemplateinline') {
+                $replacement = $document->createElementNS(self::DOCBOOK_NAMESPACE, 'para');
+
+                if (!$replacement instanceof DOMElement) {
+                    throw new LogicException('Creating an element must result in an element.');
+                }
+
+                $replacement->appendChild($element);
+            }
+        }
+
+        $previous = $lastMovedTags[$list] ?? $list;
         $list->parentNode?->insertBefore($replacement, $previous->nextSibling);
         $lastMovedTags[$list] = $replacement;
 
-        $element->parentNode?->removeChild($element);
+        if ($listItem instanceof DOMElement) {
+            $this->removeEmptyListItem($listItem);
+        }
+    }
+
+    /**
+     * Removes the list item when it has no content left, and the lists and list items containing it which are
+     * left without content.
+     */
+    private function removeEmptyListItem(DOMElement $listItem): void
+    {
+        $node = $listItem;
+
+        while (
+            $node instanceof DOMElement
+            && in_array($node->localName, ['listitem', ...self::LIST_ELEMENTS], true)
+            && !$this->hasContent($node)
+        ) {
+            $parent = $node->parentNode;
+            $parent?->removeChild($node);
+            $node = $parent;
+        }
     }
 
     private function createElement(DOMDocument $document, int $locationId, RichTextTag $tag): DOMElement
@@ -307,7 +358,7 @@ final class RichTextConverter
     private function hasContent(DOMElement $element): bool
     {
         foreach ($element->childNodes as $child) {
-            if ($child instanceof DOMText && trim($child->data) !== '') {
+            if ($child instanceof DOMText && mb_trim($child->data) !== '') {
                 return true;
             }
 

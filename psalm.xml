@@ -58,5 +58,12 @@
                 <file name="lib/Persistence/Legacy/FieldValueConverter.php" />
             </errorLevel>
         </UnsupportedPropertyReferenceUsage>
+
+        <DeprecatedMethod>
+            <errorLevel type="suppress">
+                <file name="lib/RichText/FieldStorage.php" />
+                <referencedMethod name="Ibexa\Contracts\Core\FieldType\FieldStorage::getIndexData" />
+            </errorLevel>
+        </DeprecatedMethod>
     </issueHandlers>
 </psalm>

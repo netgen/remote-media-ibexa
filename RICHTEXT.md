@@ -30,14 +30,16 @@ as the version it was created from, so the editor never changes stored locations
 
 * when the editor loads, every element is switched to a new copy of its location (`copyLocationsOnLoad`), and all
   changes made in the editor go to the copy, so a draft never changes the published version or other drafts
-* removing an element or replacing its resource does not delete the location, as the element can come back through
-  undo, paste or drag and drop
 * the form is submitted only after pending location requests have settled, and a failed request is reported with an
   error notification
+* when the Ibexa autosave runs while a location is still being created, the draft is autosaved again once the
+  pending location requests have settled, as the autosave leaves out elements without a location
 
-Locations which are no longer referenced (e.g. copies made by an editor which was closed without saving, or
-locations of deleted versions) stay in the `ngrm_remote_resource_location` table with the configured
-`location_source`.
+Locations are deleted together with the RichText fields which reference them. When a draft is discarded, or a
+version, translation, content or field definition is deleted (including archived versions over the configured
+limit), the locations referenced by the deleted RichText fields are deleted at the end of the request or console
+command, but only those which no other field references anymore: a RichText field of any version, translation or
+content (a copy of the content keeps the same location IDs), or a Netgen Remote Media field.
 
 ## Configuration
 

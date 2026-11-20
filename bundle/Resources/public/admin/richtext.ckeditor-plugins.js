@@ -5,7 +5,7 @@ import {
   hasPendingLocationRequests,
   waitForLocationRequests,
 } from '@netgen-remote-media/bundle/Resources/public/js/ckeditor-plugin/utils/location-requests';
-import { getUnusedStoredLocations } from '@netgen-remote-media/bundle/Resources/public/js/ckeditor-plugin/utils/locations';
+import { deleteOwnLocations, getUnusedStoredLocations } from '@netgen-remote-media/bundle/Resources/public/js/ckeditor-plugin/utils/locations';
 import ibexaCustomTagFormat from './ckeditor/ibexa-custom-tag-format';
 
 (function (doc, ibexa) {
@@ -61,8 +61,14 @@ import ibexaCustomTagFormat from './ckeditor/ibexa-custom-tag-format';
     setTimeout(() => input.remove(), 0);
   };
 
+  // Cancel deletes the draft, or creates nothing, so the locations the editor created or copied are never stored:
+  // all of them are deleted, also those still in the editor data. Locations of an autosaved draft are deleted with
+  // the draft as well, when nothing else references them.
+  const isCancel = submitter => submitter?.name?.endsWith('[cancel]') ?? false;
+
   // An element is stored only with its location, so the form is submitted once the pending location requests
-  // (e.g. creating the location of a just selected resource) have settled
+  // (e.g. creating the location of a just selected resource) have settled. Cancel waits for them too, so a location
+  // created in the meantime is deleted as well.
   const waitingForms = new WeakSet();
   doc.addEventListener(
     'submit',
@@ -76,7 +82,11 @@ import ibexaCustomTagFormat from './ckeditor/ibexa-custom-tag-format';
       }
 
       if (!hasPendingLocationRequests()) {
-        sendUnusedStoredLocations(form);
+        if (isCancel(event.submitter)) {
+          deleteOwnLocations(form);
+        } else {
+          sendUnusedStoredLocations(form);
+        }
 
         return;
       }

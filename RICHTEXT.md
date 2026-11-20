@@ -44,6 +44,9 @@ undo, paste or drag and drop. When the form is submitted (not with the autosave)
   or of removed elements) are sent with the form (`ngremotemedia_unused_locations`), and deleted once the content is
   saved if no field references them anymore, as other versions may still reference them
 
+When the edit is cancelled, the draft is deleted (or, for new content without a draft, nothing is stored), so all
+locations the editor created or copied are deleted, also those still in the editor data.
+
 Locations are also deleted together with the RichText fields which reference them. When a draft is discarded, or a
 version, translation, content or field definition is deleted (including archived versions over the configured
 limit), the locations referenced by the deleted RichText fields are deleted at the end of the request or console

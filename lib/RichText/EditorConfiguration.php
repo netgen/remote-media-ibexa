@@ -23,6 +23,12 @@ final class EditorConfiguration
 {
     public const LOCATION_ID_PLACEHOLDER = '__LOCATION_ID__';
 
+    /**
+     * Request parameter with the IDs of the stored locations the editor no longer references, sent when the
+     * content edit form is submitted.
+     */
+    public const UNUSED_LOCATIONS_PARAMETER = 'ngremotemedia_unused_locations';
+
     private const SETTINGS_NAMESPACE = 'netgen_remote_media_ibexa';
 
     public function __construct(
@@ -68,6 +74,7 @@ final class EditorConfiguration
                 'viewResource' => $this->generateLocationPath('netgen_remote_media_ajax_resource_view'),
             ],
             'locationIdPlaceholder' => self::LOCATION_ID_PLACEHOLDER,
+            'unusedLocationsParameter' => self::UNUSED_LOCATIONS_PARAMETER,
         ];
     }
 

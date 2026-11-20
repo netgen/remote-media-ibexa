@@ -9,15 +9,22 @@ use Doctrine\DBAL\DriverManager;
 use Ibexa\Contracts\Core\FieldType\GatewayBasedStorage;
 use Ibexa\Contracts\Core\FieldType\StorageGatewayInterface;
 use Ibexa\Contracts\Core\Persistence\Content\VersionInfo;
+use Ibexa\Contracts\Core\Repository\Events\Content\BeforeUpdateContentEvent;
+use Ibexa\Contracts\Core\Repository\Values\Content\ContentUpdateStruct;
+use Ibexa\Contracts\Core\Repository\Values\Content\VersionInfo as APIVersionInfo;
+use Netgen\Bundle\RemoteMediaIbexaBundle\EventListener\RichTextLocationCleanerListener;
 use Netgen\RemoteMedia\API\ProviderInterface;
 use Netgen\RemoteMedia\API\Values\RemoteResource;
 use Netgen\RemoteMedia\API\Values\RemoteResourceLocation;
+use Netgen\RemoteMediaIbexa\RichText\EditorConfiguration;
 use Netgen\RemoteMediaIbexa\RichText\FieldStorage;
 use Netgen\RemoteMediaIbexa\RichText\LocationCleaner;
 use Netgen\RemoteMediaIbexa\RichText\LocationGateway;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 use function array_map;
 use function implode;
@@ -26,6 +33,7 @@ use function sort;
 #[CoversClass(FieldStorage::class)]
 #[CoversClass(LocationCleaner::class)]
 #[CoversClass(LocationGateway::class)]
+#[CoversClass(RichTextLocationCleanerListener::class)]
 final class LocationCleanerTest extends TestCase
 {
     private Connection $connection;
@@ -156,6 +164,42 @@ final class LocationCleanerTest extends TestCase
         $this->locationCleaner->cleanUp();
 
         self::assertSame([15], $this->getRemovedLocationIds());
+    }
+
+    public function testDeletesUnusedStoredLocationsSentWithSavedContent(): void
+    {
+        // Published version 1 references 1, the draft referenced 2 before an autosave replaced it by the copy 3
+        $this->insertRichTextField(10, 1, $this->richText(1));
+        $this->insertRichTextField(10, 2, $this->richText(3));
+
+        $this->updateContent('2,1,invalid,0,-5');
+
+        self::assertSame([2], $this->getRemovedLocationIds());
+    }
+
+    public function testIgnoresContentSavedWithoutUnusedLocations(): void
+    {
+        $this->updateContent(null);
+        $this->updateContent('');
+
+        self::assertSame([], $this->getRemovedLocationIds());
+    }
+
+    /**
+     * Saves the content the way the content edit form does, then ends the request.
+     */
+    private function updateContent(?string $unusedLocations): void
+    {
+        $requestStack = new RequestStack();
+        $requestStack->push(
+            new Request([], $unusedLocations !== null ? [EditorConfiguration::UNUSED_LOCATIONS_PARAMETER => $unusedLocations] : []),
+        );
+
+        $listener = new RichTextLocationCleanerListener($this->locationCleaner, $requestStack);
+        $listener->onBeforeUpdateContent(
+            new BeforeUpdateContentEvent($this->createMock(APIVersionInfo::class), $this->createMock(ContentUpdateStruct::class)),
+        );
+        $listener->onTerminate();
     }
 
     /**

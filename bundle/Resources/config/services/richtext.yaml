@@ -39,5 +39,6 @@ services:
     Netgen\Bundle\RemoteMediaIbexaBundle\EventListener\RichTextLocationCleanerListener:
         arguments:
             - '@Netgen\RemoteMediaIbexa\RichText\LocationCleaner'
+            - '@request_stack'
         tags:
             - { name: kernel.event_subscriber }

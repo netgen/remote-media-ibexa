@@ -37,8 +37,12 @@ as the version it was created from, so the editor never changes stored locations
   pending location requests have settled, as the autosave leaves out elements without a location
 
 Removing an element or replacing its resource keeps its location while editing, as the element can come back through
-undo, paste or drag and drop. When the form is submitted, the locations the editor created or copied which no
-RichText field on the page references anymore are deleted.
+undo, paste or drag and drop. When the form is submitted (not with the autosave):
+
+* the locations the editor created or copied which no RichText field on the page references anymore are deleted
+* the stored locations the editor loaded which no RichText field on the page references anymore (replaced by copies,
+  or of removed elements) are sent with the form (`ngremotemedia_unused_locations`), and deleted once the content is
+  saved if no field references them anymore, as other versions may still reference them
 
 Locations are also deleted together with the RichText fields which reference them. When a draft is discarded, or a
 version, translation, content or field definition is deleted (including archived versions over the configured

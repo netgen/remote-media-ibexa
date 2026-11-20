@@ -5,11 +5,12 @@ import {
   hasPendingLocationRequests,
   waitForLocationRequests,
 } from '@netgen-remote-media/bundle/Resources/public/js/ckeditor-plugin/utils/location-requests';
+import { getUnusedStoredLocations } from '@netgen-remote-media/bundle/Resources/public/js/ckeditor-plugin/utils/locations';
 import ibexaCustomTagFormat from './ckeditor/ibexa-custom-tag-format';
 
 (function (doc, ibexa) {
   // Provided by Netgen\Bundle\RemoteMediaIbexaBundle\Component\RichTextConfigurationComponent
-  const { config, source, endpoints, locationIdPlaceholder } = ibexa.richText.ngremotemedia;
+  const { config, source, endpoints, locationIdPlaceholder, unusedLocationsParameter } = ibexa.richText.ngremotemedia;
   const withLocationId = path => locationId => path.replace(locationIdPlaceholder, locationId);
 
   // The Symfony form textarea backing the editor, unique per RichText field on the page
@@ -40,6 +41,26 @@ import ibexaCustomTagFormat from './ckeditor/ibexa-custom-tag-format';
     true,
   );
 
+  // The editor never deletes stored locations, other versions may reference them. The stored locations which are no
+  // longer in the editor data (replaced by copies, or of removed elements) are sent with the form, and the server
+  // deletes those which nothing references anymore once the draft is saved. The field is added only to the submission,
+  // so the autosave never sends it: the editor can still bring the elements back through undo.
+  const sendUnusedStoredLocations = (form) => {
+    const locationIds = getUnusedStoredLocations(form);
+    if (locationIds.length === 0) {
+      return;
+    }
+
+    const input = doc.createElement('input');
+    input.type = 'hidden';
+    input.name = unusedLocationsParameter;
+    input.value = locationIds.join(',');
+    form.append(input);
+
+    // The form data set is built right after the submit event, in the same task
+    setTimeout(() => input.remove(), 0);
+  };
+
   // An element is stored only with its location, so the form is submitted once the pending location requests
   // (e.g. creating the location of a just selected resource) have settled
   const waitingForms = new WeakSet();
@@ -55,6 +76,8 @@ import ibexaCustomTagFormat from './ckeditor/ibexa-custom-tag-format';
       }
 
       if (!hasPendingLocationRequests()) {
+        sendUnusedStoredLocations(form);
+
         return;
       }
 

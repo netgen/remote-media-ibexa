@@ -16,11 +16,11 @@ use function array_diff;
 use function array_keys;
 
 /**
- * Deletes remote resource locations of deleted RichText fields which are not referenced anymore.
+ * Deletes remote resource locations of deleted or changed RichText fields which are not referenced anymore.
  *
- * Every version, translation and copy of the content can reference the same locations, so the locations of the
- * deleted fields are only collected while the fields are deleted. They are deleted later by `cleanUp()`, once the
- * fields are gone, only when no other field references them.
+ * Every version, translation and copy of the content can reference the same locations, so the locations are only
+ * collected while the fields are deleted or changed. They are deleted later by `cleanUp()`, once the fields are gone
+ * or changed, only when no field references them anymore.
  */
 final class LocationCleaner
 {
@@ -46,6 +46,20 @@ final class LocationCleaner
     public function collect(VersionInfo $versionInfo, array $fieldIds): void
     {
         foreach ($this->gateway->loadLocationIds($fieldIds, $versionInfo->versionNo) as $locationId) {
+            $this->locationIds[$locationId] = true;
+        }
+    }
+
+    /**
+     * Collects the stored locations the editor reports as no longer used when the content is saved. Earlier
+     * autosaves may have removed them from the saved version already, so they are deleted only when no field
+     * references them anymore, as all collected locations.
+     *
+     * @param int[] $locationIds
+     */
+    public function collectUnused(array $locationIds): void
+    {
+        foreach ($locationIds as $locationId) {
             $this->locationIds[$locationId] = true;
         }
     }

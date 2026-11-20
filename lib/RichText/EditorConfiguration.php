@@ -63,6 +63,7 @@ final class EditorConfiguration
             'endpoints' => [
                 'createLocation' => $this->router->generate('netgen_remote_media_ajax_location_create'),
                 'updateLocation' => $this->generateLocationPath('netgen_remote_media_ajax_location_update'),
+                'deleteLocation' => $this->generateLocationPath('netgen_remote_media_ajax_location_delete'),
                 'getSelectedImage' => $this->generateLocationPath('netgen_remote_media_ajax_location_selected_image'),
                 'viewResource' => $this->generateLocationPath('netgen_remote_media_ajax_resource_view'),
             ],

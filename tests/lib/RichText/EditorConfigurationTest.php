@@ -74,11 +74,11 @@ final class EditorConfigurationTest extends TestCase
         $configuration = $this->getConfiguration();
         $placeholder = EditorConfiguration::LOCATION_ID_PLACEHOLDER;
 
-        // Location deletion is not exposed: locations are never deleted from the editor
         self::assertSame(
             [
                 'createLocation' => '/netgen_remote_media_ajax_location_create',
                 'updateLocation' => '/netgen_remote_media_ajax_location_update?locationId=' . $placeholder,
+                'deleteLocation' => '/netgen_remote_media_ajax_location_delete?locationId=' . $placeholder,
                 'getSelectedImage' => '/netgen_remote_media_ajax_location_selected_image?locationId=' . $placeholder,
                 'viewResource' => '/netgen_remote_media_ajax_resource_view?locationId=' . $placeholder,
             ],

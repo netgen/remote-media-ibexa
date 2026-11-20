@@ -11,7 +11,7 @@ Remote media in the RichText field, see [RICHTEXT.md](RICHTEXT.md) and [UPGRADE]
 ### Added
 
 * Netgen Remote Media button in the RichText (CKEditor 5) toolbar of the admin UI, selected resources are stored in the RichText XML as the `ngremotemedia` custom tag (`locationId`, `variationName`, `cssClass` and `alignment`) and rendered server side with `@ibexadesign/ngremotemedia/richtext/custom_tag.html.twig`
-* the editor works on copies of the stored remote resource locations, so changes made in a draft, translation or copy never change the locations of other versions or content
+* the editor never changes stored remote resource locations, the first change of an element goes to a copy of its location, so changes made in a draft, translation or copy never change the locations of other versions or content, and the locations the editor created or copied which no RichText field on the page references anymore are deleted when the form is submitted
 * remote resource locations of deleted RichText fields (discarded drafts, deleted versions, translations, content and field definitions) are deleted at the end of the request or console command, when no other RichText field of any version or content and no Netgen Remote Media field references them, by `Netgen\RemoteMediaIbexa\RichText\FieldStorage`, which decorates the RichText external storage
 * the content edit form is autosaved again once pending location requests have settled, when the Ibexa autosave ran while a location was being created
 * siteaccess aware `netgen_remote_media_ibexa.system.<scope>.richtext` semantic configuration (`variation_group`, `location_source`, `allowed_types`, `allowed_visibilities`, `allowed_tags`, `disable_upload`, `folder`, `parent_folder` and `upload_context`)

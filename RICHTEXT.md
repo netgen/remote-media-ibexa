@@ -28,14 +28,19 @@ Each element stores the ID of a remote resource location, which holds the crop s
 alt text and caption overrides. Every version, translation and copy of the content starts with the same location IDs
 as the version it was created from, so the editor never changes stored locations:
 
-* when the editor loads, every element is switched to a new copy of its location (`copyLocationsOnLoad`), and all
-  changes made in the editor go to the copy, so a draft never changes the published version or other drafts
+* the first change of an element in the editor creates a copy of its location with the change, and the element is
+  switched to the copy (`copyLocationsOnChange`), so a draft never changes the published version or other drafts;
+  opening the editor without changes creates nothing
 * the form is submitted only after pending location requests have settled, and a failed request is reported with an
   error notification
 * when the Ibexa autosave runs while a location is still being created, the draft is autosaved again once the
   pending location requests have settled, as the autosave leaves out elements without a location
 
-Locations are deleted together with the RichText fields which reference them. When a draft is discarded, or a
+Removing an element or replacing its resource keeps its location while editing, as the element can come back through
+undo, paste or drag and drop. When the form is submitted, the locations the editor created or copied which no
+RichText field on the page references anymore are deleted.
+
+Locations are also deleted together with the RichText fields which reference them. When a draft is discarded, or a
 version, translation, content or field definition is deleted (including archived versions over the configured
 limit), the locations referenced by the deleted RichText fields are deleted at the end of the request or console
 command, but only those which no other field references anymore: a RichText field of any version, translation or

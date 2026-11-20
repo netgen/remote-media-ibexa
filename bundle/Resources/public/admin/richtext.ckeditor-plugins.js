@@ -25,12 +25,13 @@ import ibexaCustomTagFormat from './ckeditor/ibexa-custom-tag-format';
         source,
         format: ibexaCustomTagFormat,
         // Every version, translation and copy of the content references the same locations as the version it was
-        // created from, so the editor works on copies and changes made in a draft never reach other versions
-        copyLocationsOnLoad: true,
+        // created from, so the editor never changes stored locations: the first change of an element goes to a copy
+        copyLocationsOnChange: true,
         onError: message => ibexa.helpers.notification.showErrorNotification(message),
         endpoints: {
           createLocation: endpoints.createLocation,
           updateLocation: withLocationId(endpoints.updateLocation),
+          deleteLocation: withLocationId(endpoints.deleteLocation),
           getSelectedImage: withLocationId(endpoints.getSelectedImage),
           viewResource: withLocationId(endpoints.viewResource),
         },

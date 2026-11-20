@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Netgen\RemoteMediaIbexa\RichText;
 
 use Ibexa\Contracts\Core\FieldType\GatewayBasedStorage;
+use Ibexa\Contracts\Core\FieldType\StorageGatewayInterface;
 use Ibexa\Contracts\Core\Persistence\Content\Field;
 use Ibexa\Contracts\Core\Persistence\Content\VersionInfo;
 
@@ -14,7 +15,8 @@ use Ibexa\Contracts\Core\Persistence\Content\VersionInfo;
  * locations of the deleted fields.
  *
  * Extends GatewayBasedStorage like the decorated storage, as the legacy storage handler copies external data only
- * for gateway based storages. Every call goes to the decorated storage.
+ * for gateway based storages. Every call goes to the decorated storage. The gateway is injected, as RichTextStorage
+ * redeclares its protected `$gateway` property, which then can't be read here.
  *
  * @extends \Ibexa\Contracts\Core\FieldType\GatewayBasedStorage<\Ibexa\Contracts\Core\FieldType\StorageGatewayInterface>
  */
@@ -22,9 +24,10 @@ final class FieldStorage extends GatewayBasedStorage
 {
     public function __construct(
         private readonly GatewayBasedStorage $innerStorage,
+        StorageGatewayInterface $gateway,
         private readonly LocationCleaner $locationCleaner,
     ) {
-        parent::__construct($innerStorage->gateway);
+        parent::__construct($gateway);
     }
 
     public function storeFieldData(VersionInfo $versionInfo, Field $field, array $context): mixed

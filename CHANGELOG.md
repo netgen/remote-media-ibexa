@@ -6,7 +6,7 @@ Remote media in the RichText field, see [RICHTEXT.md](RICHTEXT.md) and [UPGRADE]
 
 ### BC breaks
 
-* requires `netgen/remote-media-bundle` 3.2.1+ (CKEditor 5 plugin), `ibexa/fieldtype-richtext` 4.4+ and `symfony/polyfill-mbstring` 1.31+ (`mb_trim` on PHP < 8.4)
+* requires `netgen/remote-media-bundle` 3.3.0+ (CKEditor 5 plugin), `ibexa/fieldtype-richtext` 4.4+ and `symfony/polyfill-mbstring` 1.31+ (`mb_trim` on PHP < 8.4)
 
 ### Added
 

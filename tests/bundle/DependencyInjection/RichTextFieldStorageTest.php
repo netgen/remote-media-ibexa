@@ -115,6 +115,12 @@ final class RichTextFieldStorageTest extends TestCase
             ->addArgument(new Reference('ibexa.api.storage_engine.legacy.connection'));
         $container->register(TwigComponent::class, TwigComponent::class)->setAbstract(true);
 
+        // Injected into the RichText storage since ibexa/fieldtype-richtext 4.6.33
+        $container->register(
+            'Ibexa\Contracts\FieldTypeRichText\RichText\DOMDocumentLoaderInterface',
+            'Ibexa\FieldTypeRichText\RichText\DOMDocumentLoader',
+        );
+
         foreach (['ibexa.api.storage_engine.legacy.connection', 'ibexa.persistence.connection'] as $id) {
             $container->setDefinition($id, (new Definition(Connection::class))->setSynthetic(true)->setPublic(true));
         }

@@ -6,12 +6,13 @@ namespace Netgen\RemoteMediaIbexa\Tests\RichText;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
-use Ibexa\Contracts\Core\FieldType\GatewayBasedStorage;
-use Ibexa\Contracts\Core\FieldType\StorageGatewayInterface;
 use Ibexa\Contracts\Core\Persistence\Content\VersionInfo;
 use Ibexa\Contracts\Core\Repository\Events\Content\BeforeUpdateContentEvent;
 use Ibexa\Contracts\Core\Repository\Values\Content\ContentUpdateStruct;
 use Ibexa\Contracts\Core\Repository\Values\Content\VersionInfo as APIVersionInfo;
+use Ibexa\Core\FieldType\Url\UrlStorage\Gateway\DoctrineStorage as UrlGateway;
+use Ibexa\FieldTypeRichText\FieldType\RichText\RichTextStorage;
+use Ibexa\FieldTypeRichText\FieldType\RichText\RichTextStorage\Gateway\DoctrineStorage as RichTextGateway;
 use Netgen\Bundle\RemoteMediaIbexaBundle\EventListener\RichTextLocationCleanerListener;
 use Netgen\RemoteMedia\API\ProviderInterface;
 use Netgen\RemoteMedia\API\Values\RemoteResource;
@@ -21,7 +22,6 @@ use Netgen\RemoteMediaIbexa\RichText\FieldStorage;
 use Netgen\RemoteMediaIbexa\RichText\LocationCleaner;
 use Netgen\RemoteMediaIbexa\RichText\LocationGateway;
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -40,11 +40,6 @@ final class LocationCleanerTest extends TestCase
 
     private FieldStorage $fieldStorage;
 
-    /**
-     * @var \Ibexa\Contracts\Core\FieldType\GatewayBasedStorage<\Ibexa\Contracts\Core\FieldType\StorageGatewayInterface>&\PHPUnit\Framework\MockObject\MockObject
-     */
-    private GatewayBasedStorage&MockObject $innerStorage;
-
     private LocationCleaner $locationCleaner;
 
     /**
@@ -62,6 +57,11 @@ final class LocationCleanerTest extends TestCase
         $this->connection->executeStatement(
             'CREATE TABLE ngrm_remote_media_content_link (id INTEGER PRIMARY KEY, field_id INTEGER NOT NULL, '
             . 'version INTEGER NOT NULL, remote_resource_location_id INTEGER NOT NULL)',
+        );
+        $this->connection->executeStatement('CREATE TABLE ezurl (id INTEGER PRIMARY KEY, url TEXT)');
+        $this->connection->executeStatement(
+            'CREATE TABLE ezurl_object_link (contentobject_attribute_id INTEGER NOT NULL, '
+            . 'contentobject_attribute_version INTEGER NOT NULL, url_id INTEGER NOT NULL)',
         );
 
         $provider = $this->createMock(ProviderInterface::class);
@@ -82,11 +82,10 @@ final class LocationCleanerTest extends TestCase
             );
 
         $this->locationCleaner = new LocationCleaner(new LocationGateway($this->connection), $provider);
-        $this->innerStorage = $this->getMockBuilder(GatewayBasedStorage::class)
-            ->setConstructorArgs([$this->createMock(StorageGatewayInterface::class)])
-            ->getMock();
 
-        $this->fieldStorage = new FieldStorage($this->innerStorage, $this->locationCleaner);
+        // The real RichText storage, it redeclares the gateway property the decorator can't read
+        $gateway = new RichTextGateway(new UrlGateway($this->connection), $this->connection);
+        $this->fieldStorage = new FieldStorage(new RichTextStorage($gateway), $gateway, $this->locationCleaner);
     }
 
     public function testDeletesLocationsOfDeletedVersionOnlyWhenNotReferenced(): void
@@ -95,16 +94,20 @@ final class LocationCleanerTest extends TestCase
         $this->insertRichTextField(10, 1, $this->richText(1, 2));
         $this->insertRichTextField(10, 2, $this->richText(1, 4, 3));
         $this->insertRichTextField(20, 1, $this->richText(1, 2));
-
-        $this->innerStorage
-            ->expects(self::once())
-            ->method('deleteFieldData')
-            ->with(self::isInstanceOf(VersionInfo::class), [10], []);
+        $this->connection->insert('ezurl', ['id' => 1, 'url' => 'https://example.com']);
+        $this->connection->insert('ezurl_object_link', ['contentobject_attribute_id' => 10, 'contentobject_attribute_version' => 1, 'url_id' => 1]);
+        $this->connection->insert('ezurl_object_link', ['contentobject_attribute_id' => 10, 'contentobject_attribute_version' => 2, 'url_id' => 1]);
 
         $this->deleteVersion([10], 2);
         $this->locationCleaner->cleanUp();
 
         self::assertSame([3, 4], $this->getRemovedLocationIds());
+
+        // The decorated storage deleted its own data of the deleted version only
+        self::assertSame(
+            [1],
+            array_map('intval', $this->connection->fetchFirstColumn('SELECT contentobject_attribute_version FROM ezurl_object_link')),
+        );
     }
 
     public function testDeletesLocationsSharedByAllDeletedVersions(): void

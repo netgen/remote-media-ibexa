@@ -36,10 +36,10 @@ services:
             - '@netgen_remote_media_ibexa.migration.v2.richtext_custom_template_validator'
             - '@ibexa.config.resolver'
 
-    Netgen\Bundle\RemoteMediaIbexaBundle\Command\MigrateV2Command:
+    Netgen\Bundle\RemoteMediaIbexaBundle\Command\MigrateV2ToV3Command:
         arguments:
             - '@Netgen\RemoteMediaIbexa\Migration\V2\FieldMigration'
             - '@Netgen\RemoteMediaIbexa\Migration\V2\RichTextMigration'
             - '@ibexa.cache_pool'
         tags:
-            - { name: console.command, command: 'netgen:remote_media:ibexa:migrate_v2' }
+            - { name: console.command, command: 'netgen:remote_media:ibexa:migrate_v2_to_v3' }

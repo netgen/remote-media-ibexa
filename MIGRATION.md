@@ -45,7 +45,7 @@ which render as invalid data.
 3. Run the migration:
 
    ```
-   php bin/console netgen:remote_media:ibexa:migrate_v2
+   php bin/console netgen:remote_media:ibexa:migrate_v2_to_v3
    ```
 
    Fields and custom tags which are already migrated are skipped, so the command can run again, e.g. after an

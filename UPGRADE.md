@@ -20,7 +20,7 @@ Version 1.1 adds remote media to the RichText field, see [RICHTEXT.md](RICHTEXT.
     php bin/console doctrine:migrations:migrate --configuration=vendor/netgen/remote-media-bundle/migrations/doctrine.yaml
     ```
 
-* Netgen Remote Media 2 data which was left in the database when upgrading to 1.0 can now be migrated with the `netgen:remote_media:ibexa:migrate_v2` command, see [MIGRATION.md](MIGRATION.md).
+* Netgen Remote Media 2 data which was left in the database when upgrading to 1.0 can now be migrated with the `netgen:remote_media:ibexa:migrate_v2_to_v3` command, see [MIGRATION.md](MIGRATION.md).
 
 ### Assets
 
@@ -91,7 +91,7 @@ The core bundle changed too, see the `netgen/remote-media-bundle` [CHANGELOG](ht
     php bin/console doctrine:migrations:migrate --configuration=vendor/netgen/remote-media-bundle/migrations/doctrine.yaml
     ```
 
-* Netgen Remote Media 2 data (field values and RichText custom tags) is migrated by the `netgen:remote_media:ibexa:migrate_v2` command of 1.1, see [MIGRATION.md](MIGRATION.md).
+* Netgen Remote Media 2 data (field values and RichText custom tags) is migrated by the `netgen:remote_media:ibexa:migrate_v2_to_v3` command of 1.1, see [MIGRATION.md](MIGRATION.md).
 
 ### Breaking changes
 

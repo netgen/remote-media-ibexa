@@ -19,7 +19,7 @@ Remote media in the RichText field, see [RICHTEXT.md](RICHTEXT.md) and [UPGRADE]
 * the plugin configuration is exposed as `ibexa.richText.ngremotemedia` by an admin UI component (`script-head` group) rendering `@ibexadesign/ngremotemedia/richtext/editor_configuration.html.twig`
 * Twig functions `ngrm_ibexa_can_read_protected`, `ngrm_ibexa_view_resource_template` and `ngrm_ibexa_richtext_editor_configuration`
 * the RichText custom tag template renders the caption override of the location in a `<figure>` with a `<figcaption>`
-* `netgen:remote_media:ibexa:migrate_v2` command which migrates Netgen Remote Media 2 field values, field definitions and RichText custom tags, with per-usage alt texts and captions as location overrides, see [MIGRATION.md](MIGRATION.md)
+* `netgen:remote_media:ibexa:migrate_v2_to_v3` command which migrates Netgen Remote Media 2 field values, field definitions and RichText custom tags, with per-usage alt texts and captions as location overrides, see [MIGRATION.md](MIGRATION.md)
 * alt text and caption override inputs in the admin field edit are styled like the other inputs
 
 ### Fixed

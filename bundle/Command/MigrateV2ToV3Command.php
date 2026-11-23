@@ -18,7 +18,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use function count;
 use function sprintf;
 
-final class MigrateV2Command extends Command
+final class MigrateV2ToV3Command extends Command
 {
     public function __construct(
         private readonly FieldMigration $fieldMigration,
@@ -31,7 +31,7 @@ final class MigrateV2Command extends Command
     protected function configure(): void
     {
         $this
-            ->setName('netgen:remote_media:ibexa:migrate_v2')
+            ->setName('netgen:remote_media:ibexa:migrate_v2_to_v3')
             ->setDescription('Migrates Netgen Remote Media 2 data (field values and RichText custom tags) to Netgen Remote Media 3')
             ->addOption('batch-size', null, InputOption::VALUE_REQUIRED, 'Number of fields processed at once', '500')
             ->setHelp(

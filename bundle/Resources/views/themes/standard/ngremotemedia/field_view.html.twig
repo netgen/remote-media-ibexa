@@ -15,7 +15,7 @@
         {% set remote_resource = field.value.remoteResourceLocation.remoteResource %}
 
         <div {{ block('field_attributes') }}>
-            {% if remote_resource.public or is_granted('ibexa:ngrm:read_protected') %}
+            {% if remote_resource.public or ngrm_ibexa_can_read_protected() %}
                 {% if remote_resource.protected %}
                     {% set remote_resource_location = ngrm_authenticate_remote_resource_location(remote_resource_location, 300) %}
                 {% endif %}

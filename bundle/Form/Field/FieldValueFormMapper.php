@@ -7,6 +7,7 @@ namespace Netgen\Bundle\RemoteMediaIbexaBundle\Form\Field;
 use Ibexa\Contracts\ContentForms\Data\Content\FieldData;
 use Ibexa\Contracts\ContentForms\FieldType\FieldValueFormMapperInterface;
 use Ibexa\Contracts\Core\Repository\FieldTypeService;
+use Ibexa\Core\MVC\Symfony\Security\Authorization\Attribute;
 use Netgen\RemoteMedia\Form\Type\RemoteMediaType;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Security\Core\Security;
@@ -31,7 +32,7 @@ class FieldValueFormMapper implements FieldValueFormMapperInterface
         $contentTypeIdentifier = $content?->getContentType()->identifier ?? 'default';
 
         $locationSource = $fieldSettings['locationSource'] ?? 'ibexa_content_' . $contentTypeIdentifier . '_' . $fieldDefinition->identifier;
-        $disableUpload = !$this->security->isGranted('ibexa:ngrm:upload') || $fieldSettings['disableUpload'];
+        $disableUpload = !$this->security->isGranted(new Attribute('ngrm', 'upload')) || $fieldSettings['disableUpload'];
 
         $fieldForm->add(
             $formConfig->getFormFactory()->createBuilder()

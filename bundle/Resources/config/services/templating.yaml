@@ -7,5 +7,6 @@ services:
         arguments:
             - "@netgen_remote_media.provider"
             - "@security.helper"
+            - "%netgen_remote_media.templates.view_resource%"
         tags:
             - { name: twig.runtime }

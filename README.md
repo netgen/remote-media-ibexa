@@ -6,6 +6,10 @@ This bundle provides an integration of [Netgen Remote Media](https://github.com/
 
 [INSTALL.md](INSTALL.md)
 
+## Remote media in the RichText field
+
+[RICHTEXT.md](RICHTEXT.md)
+
 ## Changelog and upgrade instructions
 
 * [CHANGELOG.md](CHANGELOG.md)
@@ -20,4 +24,10 @@ You can run unit tests by calling `composer test` from the repo root:
 
 ```
 $ composer test
+```
+
+JavaScript tests use the Node.js test runner (Node.js 22.12+) and need no dependencies:
+
+```
+$ node --test 'tests/js/**/*.test.mjs'
 ```

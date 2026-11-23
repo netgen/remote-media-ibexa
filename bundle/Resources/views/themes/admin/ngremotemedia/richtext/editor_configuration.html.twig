@@ -1,0 +1,4 @@
+{# Exposes the configuration of the remote media CKEditor 5 plugin as "ibexa.richText.ngremotemedia" #}
+<script>
+    window.ibexa.addConfig('richText.ngremotemedia', {{ ngrm_ibexa_richtext_editor_configuration()|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }});
+</script>

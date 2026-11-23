@@ -1,0 +1,9 @@
+system:
+    admin_group:
+        fieldtypes:
+            ezrichtext:
+                toolbar:
+                    ngremotemedia_group:
+                        buttons:
+                            ngremotemedia:
+                                priority: 5

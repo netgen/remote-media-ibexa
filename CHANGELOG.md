@@ -1,5 +1,28 @@
 # Netgen Remote Media & Ibexa CMS integration changelog
 
+## 1.1.0
+
+Remote media in the RichText field, see [RICHTEXT.md](RICHTEXT.md) and [UPGRADE](UPGRADE.md#upgrade-from-10-to-11).
+
+### BC breaks
+
+* requires `netgen/remote-media-bundle` 3.3.0+ (CKEditor 5 plugin), `ibexa/fieldtype-richtext` 4.4+ and `symfony/polyfill-mbstring` 1.31+ (`mb_trim` on PHP < 8.4)
+
+### Added
+
+* Netgen Remote Media button in the RichText (CKEditor 5) toolbar of the admin UI, selected resources are stored in the RichText XML as the `ngremotemedia` custom tag (`locationId`, `variationName`, `cssClass` and `alignment`) and rendered server side with `@ibexadesign/ngremotemedia/richtext/custom_tag.html.twig`
+* the editor never changes stored remote resource locations, the first change of an element goes to a copy of its location, so changes made in a draft, translation or copy never change the locations of other versions or content; when the form is submitted, the locations the editor created or copied which no RichText field on the page references anymore are deleted, and the stored locations it no longer references are sent with the form (`ngremotemedia_unused_locations`) and deleted once the content is saved, when no field references them anymore; when the edit is cancelled, all locations the editor created or copied are deleted
+* remote resource locations of deleted RichText fields (discarded drafts, deleted versions, translations, content and field definitions) are deleted at the end of the request or console command, when no other RichText field of any version or content and no Netgen Remote Media field references them, by `Netgen\RemoteMediaIbexa\RichText\FieldStorage`, which decorates the RichText external storage
+* the content edit form is autosaved again once pending location requests have settled, when the Ibexa autosave ran while a location was being created
+* siteaccess aware `netgen_remote_media_ibexa.system.<scope>.richtext` semantic configuration (`variation_group`, `location_source`, `allowed_types`, `allowed_visibilities`, `allowed_tags`, `disable_upload`, `folder`, `parent_folder` and `upload_context`)
+* `Resources/encore/ibexa.richtext.config.manager.js` which adds the plugin to the `richtext` Encore build
+* the plugin configuration is exposed as `ibexa.richText.ngremotemedia` by an admin UI component (`script-head` group) rendering `@ibexadesign/ngremotemedia/richtext/editor_configuration.html.twig`
+* Twig functions `ngrm_ibexa_can_read_protected`, `ngrm_ibexa_view_resource_template` and `ngrm_ibexa_richtext_editor_configuration`
+
+### Fixed
+
+* the `ngrm / upload` and `ngrm / read_protected` policies are checked with Ibexa authorization attributes, so they work without a voter for `ibexa:module:function` strings (e.g. from `lolautruche/ez-core-extra-bundle`)
+
 ## 1.0.0
 
 First release. The package contains the Ibexa integration which lived inside `netgen/remote-media-bundle` 2.x (eZ Platform 2.x), rebuilt on top of [Netgen Remote Media](https://github.com/netgen/NetgenRemoteMediaBundle/tree/3.0) 3.x for Ibexa CMS 4.4+. See [UPGRADE](UPGRADE.md) for the upgrade instructions.

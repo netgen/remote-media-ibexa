@@ -1,0 +1,45 @@
+services:
+    Netgen\RemoteMediaIbexa\RichText\EditorConfiguration:
+        arguments:
+            - '@ibexa.config.resolver'
+            - '@netgen_remote_media.controller.configuration'
+            - '@router'
+            - '@security.helper'
+        tags:
+            - { name: twig.runtime }
+
+    # An admin UI component instead of a RichText configuration provider: providers are resolved through a Twig global
+    # on every Twig rendering on every siteaccess, the component only when the admin UI layout is rendered
+    netgen.remote_media_ibexa.admin.component.richtext_editor_configuration:
+        parent: Ibexa\AdminUi\Component\TwigComponent
+        arguments:
+            - "@twig"
+            - "@@ibexadesign/ngremotemedia/richtext/editor_configuration.html.twig"
+        tags:
+            - { name: ibexa.admin_ui.component, group: 'script-head' }
+
+    Netgen\RemoteMediaIbexa\RichText\LocationGateway:
+        arguments:
+            - '@ibexa.persistence.connection'
+
+    Netgen\RemoteMediaIbexa\RichText\LocationCleaner:
+        arguments:
+            - '@Netgen\RemoteMediaIbexa\RichText\LocationGateway'
+            - '@netgen_remote_media.provider'
+            - '@logger'
+
+    # Collects the locations of deleted RichText fields, the storage is called for every deleted field
+    Netgen\RemoteMediaIbexa\RichText\FieldStorage:
+        decorates: Ibexa\FieldTypeRichText\FieldType\RichText\RichTextStorage
+        decoration_on_invalid: ignore
+        arguments:
+            - '@.inner'
+            - '@Ibexa\FieldTypeRichText\FieldType\RichText\RichTextStorage\Gateway\DoctrineStorage'
+            - '@Netgen\RemoteMediaIbexa\RichText\LocationCleaner'
+
+    Netgen\Bundle\RemoteMediaIbexaBundle\EventListener\RichTextLocationCleanerListener:
+        arguments:
+            - '@Netgen\RemoteMediaIbexa\RichText\LocationCleaner'
+            - '@request_stack'
+        tags:
+            - { name: kernel.event_subscriber }

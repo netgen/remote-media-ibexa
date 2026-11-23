@@ -1,0 +1,20 @@
+{# Renders the "ngremotemedia" RichText custom tag, override per design in "themes/<theme>/ngremotemedia/richtext/custom_tag.html.twig" #}
+{% set location_id = params.locationId|default('') %}
+{% set location = location_id matches '/^\\d+$/' ? ngrm_remote_resource_location(location_id) : null %}
+{% set alignment = params.alignment|default(null) in ['left', 'center', 'right', 'justify'] ? params.alignment : null %}
+
+{% if location is null or location.remoteResource.public or ngrm_ibexa_can_read_protected() %}
+    {% if location is not null and location.remoteResource.protected %}
+        {% set location = ngrm_authenticate_remote_resource_location(location, 300) %}
+    {% endif %}
+
+    <div class="ngremotemedia-richtext"{% if alignment %} style="text-align: {{ alignment }};"{% endif %}>
+        {% include ngrm_ibexa_view_resource_template() with {
+            location: location,
+            css_class: params.cssClass|default(null),
+            variation_name: params.variationName|default(null),
+            variation_group: ibexa.configResolver.getParameter('richtext.variation_group', 'netgen_remote_media_ibexa'),
+            alignment: alignment,
+        } only %}
+    </div>
+{% endif %}

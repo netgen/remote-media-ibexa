@@ -41,3 +41,13 @@ php bin/console doctrine:migrations:migrate --configuration=vendor/netgen/remote
 ```
 
 Run this command after every update of the bundles, for example as part of your deployment, so new migrations are applied. See the [Netgen Remote Media install instructions](https://github.com/netgen/NetgenRemoteMediaBundle/blob/3.0/docs/INSTALL.md#database) for running it automatically from the Composer scripts.
+
+## Build admin assets
+
+The RichText editor plugin is compiled into the Ibexa RichText editor build (the `richtext` Encore configuration), so rebuild it:
+
+```
+php bin/console ibexa:encore:compile --config-name richtext
+```
+
+See [RICHTEXT.md](RICHTEXT.md) for the RichText configuration.

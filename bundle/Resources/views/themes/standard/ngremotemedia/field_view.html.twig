@@ -25,7 +25,7 @@
                 {% elseif variation %}
                     {{ ngrm_remote_resource_variation_html_tag(remote_resource_location, variation_group, variation, html_attributes, force_video, use_thumbnail)|raw }}
                 {% else %}
-                    {{ ngrm_remote_resource_html_tag(remote_resource_location.remoteResource, html_attributes, force_video, use_thumbnail)|raw }}
+                    {{ ngrm_remote_resource_location_html_tag(remote_resource_location, html_attributes, force_video, use_thumbnail)|raw }}
                 {% endif %}
             {% endif %}
         </div>

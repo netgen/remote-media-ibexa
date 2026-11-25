@@ -39,6 +39,8 @@ final class SearchFields implements Indexable
         $remoteResourceLocationId = $field->value->externalData['remote_resource_location_id'];
         $remoteId = $field->value->externalData['remote_id'];
         $watermarkText = $field->value->externalData['watermark_text'];
+        $altTextOverride = $field->value->externalData['alt_text_override'] ?? null;
+        $captionOverride = $field->value->externalData['caption_override'] ?? null;
 
         try {
             $resource = $this->provider->loadByRemoteId($remoteId);
@@ -107,14 +109,14 @@ final class SearchFields implements Indexable
             new Search\Field(
                 'alttext',
                 $this->prepareStringValue(
-                    $resource instanceof RemoteResource ? $resource->getAltText() : null,
+                    $altTextOverride ?? ($resource instanceof RemoteResource ? $resource->getAltText() : null),
                 ),
                 new StringField(),
             ),
             new Search\Field(
                 'caption',
                 $this->prepareStringValue(
-                    $resource instanceof RemoteResource ? $resource->getCaption() : null,
+                    $captionOverride ?? ($resource instanceof RemoteResource ? $resource->getCaption() : null),
                 ),
                 new StringField(),
             ),

@@ -13,8 +13,8 @@ The migration runs on the database of a project already upgraded from eZ Platfor
 * the `ngremotemedia` custom tags in RichText fields: a remote resource location is created for each tag, and the
   tag is converted to the format described in [RICHTEXT.md](RICHTEXT.md)
 
-Archived versions are not migrated: their remote media fields are empty, and their RichText keeps the old tags,
-which render as invalid data.
+All versions are migrated, archived ones included. Projects with many archived versions can delete the ones they
+don't need before the migration (see below), so it has less to migrate.
 
 ## Before the migration
 
@@ -28,6 +28,14 @@ which render as invalid data.
 * The variations used by the content exist in the Netgen Remote Media 3 configuration. Variation names are kept:
   fields use the variation group named after the content type identifier, RichText uses the group configured in
   `netgen_remote_media_ibexa.system.<scope>.richtext.variation_group`.
+* Optionally, archived versions which aren't needed are deleted, e.g. with Ibexa's version cleanup command (it
+  keeps the published version, and by default the configured number of the most recent archived versions):
+
+  ```
+  php bin/console ibexa:content:cleanup-versions --status=archived
+  ```
+
+  Which versions to keep is decided per project.
 
 ## Steps
 

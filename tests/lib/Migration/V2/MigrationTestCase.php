@@ -67,9 +67,6 @@ abstract class MigrationTestCase extends TestCase
             . 'contentclassattribute_id INTEGER NOT NULL, data_type_string VARCHAR(50) NOT NULL, data_text TEXT, PRIMARY KEY (id, version))',
         );
         $this->connection->executeStatement(
-            'CREATE TABLE ezcontentobject_version (contentobject_id INTEGER NOT NULL, version INTEGER NOT NULL, status INTEGER NOT NULL)',
-        );
-        $this->connection->executeStatement(
             'CREATE TABLE ezcontentclass_attribute (id INTEGER NOT NULL, version INTEGER NOT NULL, contentclass_id INTEGER NOT NULL, '
             . 'identifier VARCHAR(50) NOT NULL, data_type_string VARCHAR(50) NOT NULL, data_text5 TEXT)',
         );
@@ -91,16 +88,6 @@ abstract class MigrationTestCase extends TestCase
                 'data_text' => $data,
             ],
         );
-
-        $versionExists = (int) $this->connection->fetchOne(
-            'SELECT COUNT(*) FROM ezcontentobject_version WHERE contentobject_id = ? AND version = ?',
-            [$contentId, $version],
-        ) > 0;
-
-        if (!$versionExists) {
-            // Status 1 is published
-            $this->connection->insert('ezcontentobject_version', ['contentobject_id' => $contentId, 'version' => $version, 'status' => 1]);
-        }
     }
 
     protected function insertResource(string $remoteId, ?string $altText, ?string $caption): void

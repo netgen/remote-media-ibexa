@@ -8,7 +8,6 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityManagerInterface;
-use Ibexa\Contracts\Core\Repository\Values\Content\VersionInfo;
 use Netgen\RemoteMedia\API\Factory\RemoteResource as RemoteResourceFactory;
 use Netgen\RemoteMedia\API\Values\RemoteResource;
 use Netgen\RemoteMedia\API\Values\RemoteResourceLocation;
@@ -41,14 +40,11 @@ use const JSON_THROW_ON_ERROR;
  * compared with the ones on the remote. A resource which doesn't exist on the remote is created from the first
  * field value using it, so the field is migrated anyway. Fields of a resource which exists on the remote but can't
  * be stored are not migrated.
- *
- * Archived versions are not migrated: their fields are empty with Netgen Remote Media 3.
  */
 final class FieldMigration
 {
     // Ibexa 4 legacy storage tables (the constants of the storage gateways are internal)
     private const FIELD_TABLE = 'ezcontentobject_attribute';
-    private const VERSION_TABLE = 'ezcontentobject_version';
     private const FIELD_DEFINITION_TABLE = 'ezcontentclass_attribute';
     private const CONTENT_TYPE_TABLE = 'ezcontentclass';
 
@@ -317,21 +313,13 @@ final class FieldMigration
             ->from(self::FIELD_TABLE, 'f')
             ->innerJoin(
                 'f',
-                self::VERSION_TABLE,
-                'v',
-                'v.contentobject_id = f.contentobject_id AND v.version = f.version',
-            )
-            ->innerJoin(
-                'f',
                 self::FIELD_DEFINITION_TABLE,
                 'fd',
                 // version is the status of a field definition, 0 is defined
                 'fd.id = f.contentclassattribute_id AND fd.version = 0',
             )
             ->where('f.data_type_string = :field_type')
-            ->andWhere('v.status <> :archived')
-            ->setParameter('field_type', $this->fieldType->getFieldTypeIdentifier())
-            ->setParameter('archived', VersionInfo::STATUS_ARCHIVED, ParameterType::INTEGER);
+            ->setParameter('field_type', $this->fieldType->getFieldTypeIdentifier());
     }
 
     /**

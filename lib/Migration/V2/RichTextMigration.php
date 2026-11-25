@@ -9,7 +9,6 @@ use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityManagerInterface;
 use DOMDocument;
-use Ibexa\Contracts\Core\Repository\Values\Content\VersionInfo;
 use Ibexa\Contracts\Core\SiteAccess\ConfigResolverInterface;
 use Ibexa\Contracts\FieldTypeRichText\RichText\ValidatorInterface;
 use Netgen\RemoteMedia\API\Values\RemoteResourceLocation;
@@ -32,8 +31,7 @@ use const LIBXML_NONET;
  * Migrates "ngremotemedia" custom tags of Netgen Remote Media 2 in RichText fields: a remote resource location
  * is created for every tag, and the tag is converted to the Netgen Remote Media 3 format, see RichTextConverter.
  *
- * Resources which aren't stored yet (not used in any field) are loaded from the remote. Archived versions are
- * not migrated.
+ * Resources which aren't stored yet (not used in any field) are loaded from the remote.
  */
 final class RichTextMigration
 {
@@ -41,7 +39,6 @@ final class RichTextMigration
 
     // Ibexa 4 legacy storage tables (the constants of the storage gateways are internal)
     private const FIELD_TABLE = 'ezcontentobject_attribute';
-    private const VERSION_TABLE = 'ezcontentobject_version';
 
     /**
      * IDs of locations created during the run, by field ID, remote ID, crop settings and caption override, so
@@ -332,18 +329,10 @@ final class RichTextMigration
     {
         return $this->getConnection()->createQueryBuilder()
             ->from(self::FIELD_TABLE, 'f')
-            ->innerJoin(
-                'f',
-                self::VERSION_TABLE,
-                'v',
-                'v.contentobject_id = f.contentobject_id AND v.version = f.version',
-            )
             ->where('f.data_type_string = :field_type')
             ->andWhere('f.data_text LIKE :tag')
-            ->andWhere('v.status <> :archived')
             ->setParameter('field_type', self::FIELD_TYPE)
-            ->setParameter('tag', '%name="ngremotemedia"%')
-            ->setParameter('archived', VersionInfo::STATUS_ARCHIVED, ParameterType::INTEGER);
+            ->setParameter('tag', '%name="ngremotemedia"%');
     }
 
     /**

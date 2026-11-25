@@ -39,9 +39,9 @@ final class MigrateV2ToV3Command extends Command
                 Migrates the data of Netgen Remote Media 2 to Netgen Remote Media 3, see MIGRATION.md of netgen/remote-media-ibexa.
                 Run the Doctrine migrations of netgen/remote-media-bundle first, they create the tables of Netgen Remote Media 3.
 
-                Archived versions are not migrated. Fields and custom tags which are already migrated are skipped, so the
-                command can run again, e.g. after an interruption. RichText tags which can't be migrated are listed per
-                content: fix them before the content is edited, the editor removes them when the content is saved.
+                All versions are migrated, archived ones included. Fields and custom tags which are already migrated are
+                skipped, so the command can run again, e.g. after an interruption. RichText tags which can't be migrated are
+                listed per content: fix them before the content is edited, the editor removes them when the content is saved.
                 EOT,
             );
     }
